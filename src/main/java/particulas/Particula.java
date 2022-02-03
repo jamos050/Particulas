@@ -18,6 +18,8 @@ import java.util.Random;
 public abstract class Particula {
     protected boolean actualizar = true;
     
+    protected int cantidad = 1;
+    
     protected Pixel pixel;
     protected double velociadMax = 5;
     protected double velociadX = 5;
@@ -41,7 +43,7 @@ public abstract class Particula {
     protected double conductividad = 15; // porcentaje de temperatura que  recibe
     
     protected int generar = -1; // particula a generar (-1 no generará nada)
-    protected double generar_prob = 0; // probabilidad de que se genera la partícula
+    protected int generar_prob = 0; // probabilidad de que se genera la partícula
     
     protected int rojo = 0;
     protected int verde = 0;
@@ -73,6 +75,7 @@ public abstract class Particula {
         p.setParticula(this);
         
         setPixel(p);
+        this.pixel.setActualizar(false);
     }
     
     private void desplazar(Particula particula){
@@ -114,10 +117,16 @@ public abstract class Particula {
         if(particula.getDencidad() < this.dencidad && !particula.isParticulaExplocion()){
             desplazar(particula);
             
-            if(this.velociadY > 0)
+            if(this.velociadY > 0){
                 this.velociadY -= particula.getFriccion();
-            else if(this.velociadY < 0)
+                if(this.velociadY < 0)
+                    this.velociadY = 0;
+            }
+            else if(this.velociadY < 0){
                 this.velociadY += particula.getFriccion();
+                if(this.velociadY > 0)
+                    this.velociadY = 0;
+            }
             
             return true;
         }
@@ -177,6 +186,8 @@ public abstract class Particula {
         
         Pixel p;
         
+        Random rand = new Random();
+        
         if(!this.fuenteTemp){
             double tempRest = Math.abs(this.temperatura) * 0.0025;
             if(this.temperatura >= 0f){
@@ -213,9 +224,7 @@ public abstract class Particula {
         }
         
         if(this.temperatura >= this.temperaturaMin || this.combustion){
-            Random rand = new Random();
-            
-            double vidaQuitar = rand.nextDouble(5);
+            double vidaQuitar = rand.nextInt(5);
             vidaQuitar -= vidaQuitar*(this.resistencia_fuego/100);
             this.vida -= vidaQuitar;
             if(this.vida <= 0){
@@ -228,7 +237,7 @@ public abstract class Particula {
     protected void generar(){
         if(this.generar != -1){
             Random rand = new Random();
-            if(rand.nextDouble(100) < this.generar_prob){
+            if(rand.nextInt(100) < this.generar_prob){
                 ArrayList<Pixel> cercanos = new ArrayList<>();
 
                 int fila = this.pixel.getFila();
@@ -273,6 +282,150 @@ public abstract class Particula {
      * con lo que los procesos de la particula deben terminar.
      */
     protected abstract boolean reaccionar(Particula particula);
+    
+    protected void cederCantidadDiagonal(){
+        int fila = this.pixel.getFila();
+        int columna = this.pixel.getColumna();
+        
+        int incrementoY;
+        if(this.velociadY > 0)
+            incrementoY = 1;
+        else
+            incrementoY = -1;
+        
+        if(fila + incrementoY < Pantalla.alto && fila + incrementoY >= 0){
+            Random rand = new Random();
+            
+            Pixel p = null;
+            Pixel p2 = null;
+            Pixel p3;
+            Pixel p4 = Pantalla.pixeles.get(fila + incrementoY).get(columna);
+            if(p4.getParticula() != null && !(p4.getParticula().isElemento() && ((Elemento)p4.getParticula()).getTipo() == this.tipo)){
+                if(columna - 1 >= 0)
+                    p = Pantalla.pixeles.get(fila + incrementoY).get(columna - 1);
+                if(columna + 1 < Pantalla.ancho)
+                    p2 = Pantalla.pixeles.get(fila + incrementoY).get(columna + 1);
+
+                if(this.cantidad > 1){
+                    if(this.cantidad == 2){
+                        if(rand.nextInt(100) < 50)
+                            p3 = p;
+                        else
+                            p3 = p2;
+
+                        if(p3 != null && p3.getParticula() == null){
+                            this.cantidad--;
+                            Pantalla.fabricaP.generarParticula(p3, this.tipo, true);
+                            p3.getParticula().comportamiento();
+                        }
+
+                    }
+                    else{
+                        if(p != null && p.getParticula() == null){
+                            this.cantidad--;
+                            Pantalla.fabricaP.generarParticula(p, this.tipo, true);
+                            p.getParticula().comportamiento();
+                        }
+
+                        if(p2 != null && p2.getParticula() == null){
+                            this.cantidad--;
+                            Pantalla.fabricaP.generarParticula(p2, this.tipo, true);
+                            p2.getParticula().comportamiento();
+                        }
+
+                    }
+                }
+            }
+        }
+    }
+    
+    protected void cederCantidadX(){
+        int fila = this.pixel.getFila();
+        int columna = this.pixel.getColumna();
+        
+        Random rand = new Random();
+        
+        Pixel p = null;
+        Pixel p2 = null;
+        
+        if(columna - 1 >= 0)
+            p = Pantalla.pixeles.get(fila).get(columna - 1);
+        
+        if(columna + 1 < Pantalla.ancho)
+            p2 = Pantalla.pixeles.get(fila).get(columna + 1);
+
+        if(this.cantidad == 2){
+            if(rand.nextInt(100) < 50){
+                if(p != null && p.getParticula() == null){
+                    this.cantidad--;
+                    Pantalla.fabricaP.generarParticula(p, this.tipo, true);
+                    p.getParticula().comportamiento();
+                }
+                else if(p2 != null && p2.getParticula() == null){
+                    this.cantidad--;
+                    Pantalla.fabricaP.generarParticula(p2, this.tipo, true);
+                    p2.getParticula().comportamiento();
+                }
+            }
+            else{
+                if(p2 != null && p2.getParticula() == null){
+                    this.cantidad--;
+                    Pantalla.fabricaP.generarParticula(p2, this.tipo, true);
+                    p2.getParticula().comportamiento();
+                }
+                else if(p != null && p.getParticula() == null){
+                    this.cantidad--;
+                    Pantalla.fabricaP.generarParticula(p, this.tipo, true);
+                    p.getParticula().comportamiento();
+                }
+            }
+        }
+        else if(this.cantidad > 2){
+            int cantAgregar = 1;
+            if(p != null && p.getParticula() == null){
+                this.cantidad -= 1;
+                Pantalla.fabricaP.generarParticula(p, this.tipo, true);
+                p.getParticula().comportamiento();
+            }
+            else
+                cantAgregar++;
+            if(p2 != null && p2.getParticula() == null){
+                this.cantidad -= cantAgregar;
+                Pantalla.fabricaP.generarParticula(p2, this.tipo, true);
+                p2.getParticula().comportamiento();
+            }
+        }
+    }
+    
+    /**
+     * Cede 1 de la cantidad de la particula actual a la de arriba/abajo
+     * @return 
+     * Retorna true si la particula actual no se eliminó
+     */
+    protected boolean cederCantidadY(){
+        int fila = this.pixel.getFila();
+        int columna = this.pixel.getColumna();
+        
+        int incrementoY;
+            if(this.velociadY > 0)
+                incrementoY = 1;
+            else
+                incrementoY = -1;
+        
+        if(fila + incrementoY < Pantalla.alto && fila + incrementoY >= 0){
+            Pixel p = Pantalla.pixeles.get(fila + incrementoY).get(columna);
+
+            if(p.getParticula() != null && p.getParticula().isElemento() && ((Elemento)p.getParticula()).getTipo() == this.tipo){
+                this.cantidad--;
+                p.getParticula().agregarCantidad(1);
+                if(this.cantidad == 0){
+                    this.pixel.eliminarParticula();
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
     
     protected boolean moverDiagonal(){
         if(this.activar_inercia || !this.inercia){
@@ -545,9 +698,16 @@ public abstract class Particula {
             for (int j = 1; j <= 5; j++) {
                 if(fila + incrementoY*j < Pantalla.alto && fila + incrementoY*j >= 0){
                     p = Pantalla.pixeles.get(fila + incrementoY*j).get(columna);
-                    if(p.getParticula() == null || (p.getParticula() != null && p.getParticula().getDencidad() < this.dencidad))
+                    
+                    if(p.getParticula() == null)
                         return false;
+                    else if(p.getParticula().getDencidad() < this.dencidad)
+                        return false;
+                    else if(p.getParticula().isElementoSolido() && ((Solido)p.getParticula()).isEstatico())
+                        break;
                 }
+                else
+                    break;
             }
             
             this.velociadX -= this.friccion;
@@ -661,6 +821,13 @@ public abstract class Particula {
         
     }
     
+    public void agregarCantidad(int cantidad){
+        this.cantidad += cantidad;
+    }
+    public void quitarCantidad(int cantidad){
+        this.cantidad -= cantidad;
+    }
+    
     //is
     public boolean isCombustion(){
         return combustion;
@@ -689,6 +856,12 @@ public abstract class Particula {
     public boolean isElementoGaseoso(){
         if(isElemento())
             return ((Elemento)this).isGaseoso();
+        return false;
+    }
+    
+    public boolean isElementoSolido(){
+        if(isElemento())
+            return ((Elemento)this).isSolido();
         return false;
     }
     
@@ -770,6 +943,10 @@ public abstract class Particula {
     
     
     //get
+    public int getCantidad() {
+        return cantidad;
+    }
+
     public double getTemperatura() {
         return temperatura;
     }
