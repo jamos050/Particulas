@@ -22,7 +22,7 @@ public abstract class Solido extends Elemento{
         if(!this.estatico){
             boolean completado = moverY();
             if(!completado)
-                completado = moverDiagonal();
+                moverDiagonal();
 
             moverX();
         }

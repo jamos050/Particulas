@@ -121,7 +121,6 @@ public class Pixel{
             setColor(this.ROJO_PRED, this.VERDE_PRED, this.AZUL_PRED);
             
             setLuzColor(0, 0, 0);
-            this.actualizar = true;
         }
     }
     
@@ -144,7 +143,6 @@ public class Pixel{
 
     public void setParticula(Particula particula) {
         this.particula = particula;
-        this.actualizar = true;
     }
 
     public void setLuzColor(int luz_rojo, int luz_verde, int luz_azul) {

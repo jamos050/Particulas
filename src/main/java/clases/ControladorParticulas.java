@@ -51,9 +51,10 @@ public class ControladorParticulas implements Runnable{
             for (int i : columna) {
                 particula = Pantalla.pixeles.get(posFila).get(i).getParticula();
                 if(particula != null){
-                    if(particula.isActualizar() || (!particula.isElementoGaseoso() && !particula.isParticulaExplocion())){
+                    if(particula.isActualizar()){
                         particula.comportamiento();
-                        particula.setActualizar(false);
+                        if(particula.isElementoGaseoso())
+                            particula.setActualizar(false);
                     }
                     else if(particula.isElementoGaseoso() || particula.isParticulaExplocion())
                         particula.setActualizar(true);

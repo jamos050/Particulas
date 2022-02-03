@@ -60,6 +60,15 @@ public class ParticulaExplocion extends Particula{
         
     }
     
+    private void soltarParticula(){
+        Random rand = new Random();
+        
+        this.pixel.eliminarParticula();
+        
+        if(this.particula != null && rand.nextInt(100) >= 25)
+            this.particula.moverParticula(this.pixel);
+    }
+    
     @Override
     protected void eliminarParticulaCombustion() {}
 
@@ -82,24 +91,15 @@ public class ParticulaExplocion extends Particula{
             moverX();
             if(fila - 1 >= 0){
                 p = Pantalla.pixeles.get(fila - 1).get(columna);
-                if(p.getParticula() != null && !p.getParticula().isParticulaExplocion()){
-                    this.pixel.eliminarParticula();
-                    if(this.particula != null)
-                        this.particula.moverParticula(this.pixel);
-                }
+                if(p.getParticula() != null && !p.getParticula().isParticulaExplocion())
+                    soltarParticula();
             }
-            else{
-                this.pixel.eliminarParticula();
-                if(this.particula != null)
-                    this.particula.moverParticula(this.pixel);
-            }
+            else
+                soltarParticula();
         }
         
         this.intencidad--;
-        if(this.intencidad <= 0){
-            this.pixel.eliminarParticula();
-            if(this.particula != null)
-                this.particula.moverParticula(this.pixel);
-        }
+        if(this.intencidad <= 0)
+            soltarParticula();
     }
 }

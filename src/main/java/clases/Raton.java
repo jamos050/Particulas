@@ -78,7 +78,7 @@ public class Raton implements MouseListener, Runnable, MouseWheelListener{
                     Pantalla.fabricaP.generarParticula(p2, Elemento.AGUA, true);
                     break;
                 case 4:
-                    Pantalla.fabricaP.generarParticula(p2, Elemento.TIERRA, true);
+                    Pantalla.fabricaP.generarParticula(p2, Elemento.HIERRO, true);
                     break;
                 case 5:
                     Pantalla.fabricaP.generarParticula(p2, Particula.PARTICULA_EXPLOCION, false);
