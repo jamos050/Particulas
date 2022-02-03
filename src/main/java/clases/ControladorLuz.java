@@ -4,6 +4,7 @@
  */
 package clases;
 
+import java.util.ArrayList;
 import particulas.Elemento;
 
 
@@ -68,12 +69,6 @@ public class ControladorLuz implements Runnable{
                     }catch(Exception e){}
                 }
             }
-                
-            try {
-                Thread.sleep(10);
-            } catch (Exception e) {
-            }
-            
         }
     }
     
