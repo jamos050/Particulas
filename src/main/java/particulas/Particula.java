@@ -19,6 +19,7 @@ public abstract class Particula {
     protected boolean actualizar = true;
     
     protected int cantidad = 1;
+    protected int limite = 2;
     
     protected Pixel pixel;
     protected double velociadMax = 5;
@@ -283,116 +284,122 @@ public abstract class Particula {
      */
     protected abstract boolean reaccionar(Particula particula);
     
-    protected void cederCantidadDiagonal(){
-        int fila = this.pixel.getFila();
-        int columna = this.pixel.getColumna();
-        
-        int incrementoY;
-        if(this.velociadY > 0)
-            incrementoY = 1;
-        else
-            incrementoY = -1;
-        
-        if(fila + incrementoY < Pantalla.alto && fila + incrementoY >= 0){
+    protected void cederCantidadYDiagonal(){
+        if(this.cantidad > 1){
+            ArrayList<Pixel> cercanos = new ArrayList<>();
+
+            int fila = this.pixel.getFila();
+            int columna = this.pixel.getColumna();
+
             Random rand = new Random();
+
+            Pixel p;
             
-            Pixel p = null;
-            Pixel p2 = null;
-            Pixel p3;
-            Pixel p4 = Pantalla.pixeles.get(fila + incrementoY).get(columna);
-            if(p4.getParticula() != null && !(p4.getParticula().isElemento() && ((Elemento)p4.getParticula()).getTipo() == this.tipo)){
-                if(columna - 1 >= 0)
-                    p = Pantalla.pixeles.get(fila + incrementoY).get(columna - 1);
-                if(columna + 1 < Pantalla.ancho)
-                    p2 = Pantalla.pixeles.get(fila + incrementoY).get(columna + 1);
-
-                if(this.cantidad > 1){
-                    if(this.cantidad == 2){
-                        if(rand.nextInt(100) < 50)
-                            p3 = p;
-                        else
-                            p3 = p2;
-
-                        if(p3 != null && p3.getParticula() == null){
-                            this.cantidad--;
-                            Pantalla.fabricaP.generarParticula(p3, this.tipo, true);
-                            p3.getParticula().comportamiento();
-                        }
-
+            int incrementoY;
+            if(this.velociadY > 0)
+                incrementoY = 1;
+            else
+                incrementoY = -1;
+            
+            if(fila + incrementoY < Pantalla.alto && fila + incrementoY >= 0){
+                //agregar laterales
+                if(rand.nextInt(100) < 50){
+                    if(columna - 1 >= 0){
+                        p = Pantalla.pixeles.get(fila + incrementoY).get(columna - 1);
+                        cercanos.add(p);
                     }
-                    else{
-                        if(p != null && p.getParticula() == null){
-                            this.cantidad--;
-                            Pantalla.fabricaP.generarParticula(p, this.tipo, true);
-                            p.getParticula().comportamiento();
-                        }
-
-                        if(p2 != null && p2.getParticula() == null){
-                            this.cantidad--;
-                            Pantalla.fabricaP.generarParticula(p2, this.tipo, true);
-                            p2.getParticula().comportamiento();
-                        }
-
+                    if(columna + 1 < Pantalla.ancho){
+                        p = Pantalla.pixeles.get(fila + incrementoY).get(columna + 1);
+                        cercanos.add(p);
                     }
+                }
+                else{
+                    if(columna + 1 < Pantalla.ancho){
+                        p = Pantalla.pixeles.get(fila + incrementoY).get(columna + 1);
+                        cercanos.add(p);
+                    }
+                    if(columna - 1 >= 0){
+                        p = Pantalla.pixeles.get(fila + incrementoY).get(columna - 1);
+                        cercanos.add(p);
+                    }
+                }
+
+                Pixel pMenor;
+                while(true){
+                    pMenor = null;
+                    for (Pixel pixel : cercanos) {
+                        if(pixel.getParticula() == null && this.cantidad > 1){
+                            this.cantidad--;
+                            Pantalla.fabricaP.generarParticula(pixel, this.tipo, true);
+                            pixel.getParticula().comportamiento();
+                        }
+                        if(pixel.getParticula() != null && pixel.getParticula().isElemento() && ((Elemento)pixel.getParticula()).getTipo() == this.tipo){
+                            if(pMenor == null || pMenor.getParticula().getCantidad() > pixel.getParticula().getCantidad())
+                                pMenor = pixel;
+                        }
+                    }
+                    if(pMenor == null || pMenor.getParticula().getCantidad() >= this.cantidad)
+                        break;
+
+                    this.cantidad--;
+                    pMenor.getParticula().agregarCantidad(1);
                 }
             }
         }
     }
     
     protected void cederCantidadX(){
-        int fila = this.pixel.getFila();
-        int columna = this.pixel.getColumna();
-        
-        Random rand = new Random();
-        
-        Pixel p = null;
-        Pixel p2 = null;
-        
-        if(columna - 1 >= 0)
-            p = Pantalla.pixeles.get(fila).get(columna - 1);
-        
-        if(columna + 1 < Pantalla.ancho)
-            p2 = Pantalla.pixeles.get(fila).get(columna + 1);
+        if(this.cantidad > 1){
+            ArrayList<Pixel> cercanos = new ArrayList<>();
 
-        if(this.cantidad == 2){
+            int fila = this.pixel.getFila();
+            int columna = this.pixel.getColumna();
+
+            Random rand = new Random();
+
+            Pixel p;
+
+            //agregar laterales
             if(rand.nextInt(100) < 50){
-                if(p != null && p.getParticula() == null){
-                    this.cantidad--;
-                    Pantalla.fabricaP.generarParticula(p, this.tipo, true);
-                    p.getParticula().comportamiento();
+                if(columna - 1 >= 0){
+                    p = Pantalla.pixeles.get(fila).get(columna - 1);
+                    cercanos.add(p);
                 }
-                else if(p2 != null && p2.getParticula() == null){
-                    this.cantidad--;
-                    Pantalla.fabricaP.generarParticula(p2, this.tipo, true);
-                    p2.getParticula().comportamiento();
+                if(columna + 1 < Pantalla.ancho){
+                    p = Pantalla.pixeles.get(fila).get(columna + 1);
+                    cercanos.add(p);
                 }
             }
             else{
-                if(p2 != null && p2.getParticula() == null){
-                    this.cantidad--;
-                    Pantalla.fabricaP.generarParticula(p2, this.tipo, true);
-                    p2.getParticula().comportamiento();
+                if(columna + 1 < Pantalla.ancho){
+                    p = Pantalla.pixeles.get(fila).get(columna + 1);
+                    cercanos.add(p);
                 }
-                else if(p != null && p.getParticula() == null){
-                    this.cantidad--;
-                    Pantalla.fabricaP.generarParticula(p, this.tipo, true);
-                    p.getParticula().comportamiento();
+                if(columna - 1 >= 0){
+                    p = Pantalla.pixeles.get(fila).get(columna - 1);
+                    cercanos.add(p);
                 }
             }
-        }
-        else if(this.cantidad > 2){
-            int cantAgregar = 1;
-            if(p != null && p.getParticula() == null){
-                this.cantidad -= 1;
-                Pantalla.fabricaP.generarParticula(p, this.tipo, true);
-                p.getParticula().comportamiento();
-            }
-            else
-                cantAgregar++;
-            if(p2 != null && p2.getParticula() == null){
-                this.cantidad -= cantAgregar;
-                Pantalla.fabricaP.generarParticula(p2, this.tipo, true);
-                p2.getParticula().comportamiento();
+
+            Pixel pMenor;
+            while(true){
+                pMenor = null;
+                for (Pixel pixel : cercanos) {
+                    if(pixel.getParticula() == null && this.cantidad > 1){
+                        this.cantidad--;
+                        Pantalla.fabricaP.generarParticula(pixel, this.tipo, true);
+                        pixel.getParticula().comportamiento();
+                    }
+                    if(pixel.getParticula() != null && pixel.getParticula().isElemento() && ((Elemento)pixel.getParticula()).getTipo() == this.tipo){
+                        if(pMenor == null || pMenor.getParticula().getCantidad() > pixel.getParticula().getCantidad())
+                            pMenor = pixel;
+                    }
+                }
+                if(pMenor == null || pMenor.getParticula().getCantidad() >= this.cantidad)
+                    break;
+
+                this.cantidad--;
+                pMenor.getParticula().agregarCantidad(1);
             }
         }
     }
@@ -407,24 +414,93 @@ public abstract class Particula {
         int columna = this.pixel.getColumna();
         
         int incrementoY;
-            if(this.velociadY > 0)
-                incrementoY = 1;
-            else
-                incrementoY = -1;
+        if(this.velociadY > 0)
+            incrementoY = 1;
+        else
+            incrementoY = -1;
         
         if(fila + incrementoY < Pantalla.alto && fila + incrementoY >= 0){
             Pixel p = Pantalla.pixeles.get(fila + incrementoY).get(columna);
-
+            
             if(p.getParticula() != null && p.getParticula().isElemento() && ((Elemento)p.getParticula()).getTipo() == this.tipo){
-                this.cantidad--;
-                p.getParticula().agregarCantidad(1);
-                if(this.cantidad == 0){
-                    this.pixel.eliminarParticula();
-                    return false;
+                if(p.getParticula().getCantidad() <= this.cantidad){
+                    this.cantidad--;
+                    p.getParticula().agregarCantidad(1);
+                    if(this.cantidad == 0){
+                        this.pixel.eliminarParticula();
+                        return false;
+                    }
                 }
             }
         }
         return true;
+    }
+    
+    protected void cederCantidad(){
+        if(this.cantidad > this.limite){
+            ArrayList<Pixel> cercanos = new ArrayList<>();
+
+            int fila = this.pixel.getFila();
+            int columna = this.pixel.getColumna();
+
+            int incrementoY;
+            if(this.velociadY > 0)
+                incrementoY = -1;
+            else
+                incrementoY = 1;
+
+            Pixel p;
+
+            Random rand = new Random();
+
+            if(fila + incrementoY < Pantalla.alto && fila + incrementoY >= 0){
+                p = Pantalla.pixeles.get(fila + incrementoY).get(columna);
+                cercanos.add(p);
+
+                //agregar diagonales
+                if(rand.nextInt(100) < 50){
+                    if(columna - 1 >= 0){
+                        p = Pantalla.pixeles.get(fila + incrementoY).get(columna - 1);
+                        cercanos.add(p);
+                    }
+                    if(columna + 1 < Pantalla.ancho){
+                        p = Pantalla.pixeles.get(fila + incrementoY).get(columna + 1);
+                        cercanos.add(p);
+                    }
+                }
+                else{
+                    if(columna + 1 < Pantalla.ancho){
+                        p = Pantalla.pixeles.get(fila + incrementoY).get(columna + 1);
+                        cercanos.add(p);
+                    }
+                    if(columna - 1 >= 0){
+                        p = Pantalla.pixeles.get(fila + incrementoY).get(columna - 1);
+                        cercanos.add(p);
+                    }
+                }
+            }
+
+            Pixel pMenor;
+            while(true){
+                pMenor = null;
+                for (Pixel pixel : cercanos) {
+                    if(pixel.getParticula() == null){
+                        this.cantidad--;
+                        Pantalla.fabricaP.generarParticula(pixel, this.tipo, true);
+                        pixel.getParticula().cederCantidadX();
+                    }
+                    if(pixel.getParticula() != null && pixel.getParticula().isElemento() && ((Elemento)pixel.getParticula()).getTipo() == this.tipo){
+                        if(pMenor == null || pMenor.getParticula().getCantidad() > pixel.getParticula().getCantidad())
+                            pMenor = pixel;
+                    }
+                }
+                if(pMenor == null || pMenor.getParticula().getCantidad() >= this.cantidad)
+                    break;
+
+                this.cantidad--;
+                pMenor.getParticula().agregarCantidad(1);
+            }
+        }
     }
     
     protected boolean moverDiagonal(){
