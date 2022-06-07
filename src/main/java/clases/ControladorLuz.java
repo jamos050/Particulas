@@ -4,7 +4,6 @@
  */
 package clases;
 
-import java.util.ArrayList;
 import particulas.Elemento;
 
 
@@ -30,7 +29,7 @@ public class ControladorLuz implements Runnable{
                 r = 0;
                 v = 0;
                 a = 0;
-
+                
                 intencidad = 255 - Pixel.luz_intencidadPred;
                 for (int j = 0; j < Pantalla.alto; j++) {
                     p = Pantalla.pixeles.get(j).get(i);
@@ -47,7 +46,7 @@ public class ControladorLuz implements Runnable{
                         }
                     }
                     p.setLuzColor((int)r, (int)v, (int)a);
-                    p.setActualizar(true);
+                    p.actualizarColorPantalla(Pantalla.g2d);
 
                     if(intencidad == 0)
                         continue;

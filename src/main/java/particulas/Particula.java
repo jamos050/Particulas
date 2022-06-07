@@ -9,7 +9,6 @@ import clases.Pantalla;
 import clases.Pixel;
 import java.awt.Color;
 import java.util.ArrayList;
-import java.util.Random;
 
 /**
  *
@@ -135,7 +134,6 @@ public abstract class Particula {
     }
     
     protected void inercia(){
-        Random rand = new Random();
         int fila = this.pixel.getFila();
         int columna = this.pixel.getColumna();
 
@@ -149,13 +147,13 @@ public abstract class Particula {
         
         try{
             if(p != null && p.getParticula() != null)
-                if(rand.nextInt(100) > p.getParticula().getResistenciaInercia()){
+                if(Pantalla.random.getNum(0, 100) > p.getParticula().getResistenciaInercia()){
                     p.getParticula().setActivar_inercia(true);
                     if(p.getParticula().getVelociadX() == 0)
                         p.getParticula().setVelociadX(1);
                 }
             if(p2 != null && p2.getParticula() != null)
-                if(rand.nextInt(100) > p2.getParticula().getResistenciaInercia()){
+                if(Pantalla.random.getNum(0, 100) > p2.getParticula().getResistenciaInercia()){
                     p2.getParticula().setActivar_inercia(true);
                     if(p2.getParticula().getVelociadX() == 0)
                         p2.getParticula().setVelociadX(1);
@@ -186,8 +184,6 @@ public abstract class Particula {
         int columna = this.pixel.getColumna();
         
         Pixel p;
-        
-        Random rand = new Random();
         
         if(!this.fuenteTemp){
             double tempRest = Math.abs(this.temperatura) * 0.0025;
@@ -225,7 +221,7 @@ public abstract class Particula {
         }
         
         if(this.temperatura >= this.temperaturaMin || this.combustion){
-            double vidaQuitar = rand.nextInt(5);
+            double vidaQuitar = Pantalla.random.getNum(0, 5);
             vidaQuitar -= vidaQuitar*(this.resistencia_fuego/100);
             this.vida -= vidaQuitar;
             if(this.vida <= 0){
@@ -237,8 +233,7 @@ public abstract class Particula {
     
     protected void generar(){
         if(this.generar != -1){
-            Random rand = new Random();
-            if(rand.nextInt(100) < this.generar_prob){
+            if(Pantalla.random.getNum(0, 100) < this.generar_prob){
                 ArrayList<Pixel> cercanos = new ArrayList<>();
 
                 int fila = this.pixel.getFila();
@@ -267,7 +262,7 @@ public abstract class Particula {
                 }
                 int tam = cercanos.size();
                 if(tam > 0)
-                    Pantalla.fabricaP.generarParticula(cercanos.get(rand.nextInt(tam)), this.generar, true);
+                    Pantalla.fabricaP.generarParticula(cercanos.get((int)Pantalla.random.getNum(0, tam)), this.generar, true);
                 
             }
         }
@@ -291,8 +286,6 @@ public abstract class Particula {
             int fila = this.pixel.getFila();
             int columna = this.pixel.getColumna();
 
-            Random rand = new Random();
-
             Pixel p;
             
             int incrementoY;
@@ -303,7 +296,7 @@ public abstract class Particula {
             
             if(fila + incrementoY < Pantalla.alto && fila + incrementoY >= 0){
                 //agregar laterales
-                if(rand.nextInt(100) < 50){
+                if(Pantalla.random.getNum(0, 100) < 50){
                     if(columna - 1 >= 0){
                         p = Pantalla.pixeles.get(fila + incrementoY).get(columna - 1);
                         cercanos.add(p);
@@ -355,12 +348,10 @@ public abstract class Particula {
             int fila = this.pixel.getFila();
             int columna = this.pixel.getColumna();
 
-            Random rand = new Random();
-
             Pixel p;
 
             //agregar laterales
-            if(rand.nextInt(100) < 50){
+            if(Pantalla.random.getNum(0, 100) < 50){
                 if(columna - 1 >= 0){
                     p = Pantalla.pixeles.get(fila).get(columna - 1);
                     cercanos.add(p);
@@ -451,14 +442,12 @@ public abstract class Particula {
 
             Pixel p;
 
-            Random rand = new Random();
-
             if(fila + incrementoY < Pantalla.alto && fila + incrementoY >= 0){
                 p = Pantalla.pixeles.get(fila + incrementoY).get(columna);
                 cercanos.add(p);
 
                 //agregar diagonales
-                if(rand.nextInt(100) < 50){
+                if(Pantalla.random.getNum(0, 100) < 50){
                     if(columna - 1 >= 0){
                         p = Pantalla.pixeles.get(fila + incrementoY).get(columna - 1);
                         cercanos.add(p);
@@ -638,7 +627,6 @@ public abstract class Particula {
                 this.velociadY = 1;
         }
         
-        Random rand = new Random();
         int dir;
         ArrayList<Pixel> movimiento;
         
@@ -658,7 +646,7 @@ public abstract class Particula {
                 movimiento.add(p);
                 
                 for (int j = 0; j < 3; j++) {
-                    dir = rand.nextInt(movimiento.size());
+                    dir = (int)Pantalla.random.getNum(0, movimiento.size());
                     p = movimiento.get(dir);
                     
                     if(reaccionar(p.getParticula()))
@@ -888,9 +876,9 @@ public abstract class Particula {
     }
     
     public void cambiarTono(int max, int min){
-        int dif = (int) ((Math.random() * (max - min)) + min);
+        int dif = (int) Pantalla.random.getNum(0, max, min);
         
-        if(Math.random() > 0.5)
+        if(Pantalla.random.getNum(0) > 0.5)
             setColor(this.rojo + dif, this.verde+ dif, this.azul+ dif);
         else
             setColor(this.rojo - dif, this.verde- dif, this.azul- dif);

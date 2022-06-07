@@ -28,6 +28,7 @@ public class Pantalla extends JFrame implements Runnable{
     
     private BufferedImage bufferedImage;
     private BufferedImage bufferedImageGUI;
+    public static Graphics2D g2d;
     public static Graphics2D g2dGUI;
     
     private JLabel imagen;
@@ -50,7 +51,7 @@ public class Pantalla extends JFrame implements Runnable{
     
     private final ControladorLuz controladorL;
     
-    private final ArrayList<PantallaPintar> pantallaPintar = new ArrayList<>();
+    public static final GenerarRandom random = GenerarRandom.nuevaEntidad(1, 1000);
     
     public Pantalla(){
         iniciarVentana();
@@ -66,9 +67,6 @@ public class Pantalla extends JFrame implements Runnable{
         this.controladorP = new ControladorParticulas();
         this.controladorL = new ControladorLuz();
         
-        // hilos que pintarán la pantalla
-        generarHilosPintarPantalla(4);
-        
         iniciarPantalla();
         iniciarImagen();
         
@@ -79,8 +77,6 @@ public class Pantalla extends JFrame implements Runnable{
         Thread t3 = new Thread(this.raton);
         t3.start();
         
-        iniciarHilosPintarPantalla();
-       
         this.iniciar = true;
     }
     
@@ -99,15 +95,10 @@ public class Pantalla extends JFrame implements Runnable{
         this.bufferedImage = new BufferedImage(this.ventana_ancho, this.ventana_alto, BufferedImage.TYPE_INT_ARGB);
         this.bufferedImageGUI = new BufferedImage(this.ventana_ancho, this.ventana_alto, BufferedImage.TYPE_INT_ARGB);
         
-        Graphics2D g2d;
-        for (PantallaPintar p : pantallaPintar) {
-            g2d = bufferedImage.createGraphics();
-            
-            g2d.setBackground(Pixel.getColorPred());
-            g2d.setColor(g2d.getBackground());
-            g2d.fillRect(0, 0, this.ventana_ancho, this.ventana_alto);
-            p.setG2d(g2d);
-        }
+        g2d = bufferedImage.createGraphics();
+        g2d.setBackground(Pixel.getColorPred());
+        g2d.setColor(g2d.getBackground());
+        g2d.fillRect(0, 0, this.ventana_ancho, this.ventana_alto);
         
         Pantalla.g2dGUI = bufferedImageGUI.createGraphics();
         
@@ -149,19 +140,6 @@ public class Pantalla extends JFrame implements Runnable{
     private void generarFrame() throws IOException{
         this.imagen.setIcon(new ImageIcon(this.bufferedImage));
         this.imagenGUI.setIcon(new ImageIcon(this.bufferedImageGUI));
-    }
-    
-    private void iniciarHilosPintarPantalla(){
-        Thread t;
-        for (PantallaPintar p : this.pantallaPintar) {
-            t = new Thread(p);
-            t.start();
-        }
-    }
-    
-    private void generarHilosPintarPantalla(int cantHilos){
-        for (int i = 0; i < cantHilos; i++)
-            this.pantallaPintar.add(new PantallaPintar(i, cantHilos));
     }
     
     public void limpiarGUI(){
@@ -467,16 +445,9 @@ public class Pantalla extends JFrame implements Runnable{
 
     @Override
     public void run() {
-        boolean continuar;
         while(true){
             if(iniciar){
                 repaint();
-                
-                continuar = true;
-                for (PantallaPintar p : this.pantallaPintar) {
-                    if(!p.isTerminado())
-                        continuar = false;
-                }
                 
                 /*
                 for (ArrayList<Pixel> fila : pixeles) {
@@ -485,14 +456,10 @@ public class Pantalla extends JFrame implements Runnable{
                     }
                 }*/
                 
-                if(continuar){
-                    try{
-                        generarFrame();
-                    }catch(Throwable e){
-                        System.out.println(e);
-                    }
-                    for (PantallaPintar p : this.pantallaPintar) 
-                        p.iniciar();
+                try{
+                    generarFrame();
+                }catch(Throwable e){
+                    System.out.println(e);
                 }
             }
         }
