@@ -1,78 +1,113 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package clases;
 
+import java.util.ArrayList;
 import particulas.Particula;
-import java.util.Random;
-import java.util.stream.IntStream;
 
 /**
  *
  * @author Josue Alvarez M
  */
-
 public class ControladorParticulas implements Runnable{
+    private Casilla casillaInicio;
     
-    /**
-     * Intercambia dos posiciones del array.
-     * ...
-     */
-    protected void swap(int[] array, int i, int j) {
-        int temp = array[i];
-        array[i] = array[j];
-        array[j] = temp;
+    public static final GenerarRandom random = GenerarRandom.nuevaEntidad();
+    
+    private ArrayList<Thread> hilos;
+    
+    public ControladorParticulas(int alto, int ancho, int cantHilos) {
+        this.casillaInicio = Casilla.nuevaCasillaInicio(alto, ancho);
+        
+        ControladorParticulas.random.addLista(cantHilos - 1);
+        ControladorParticulas.random.setMax(1000);
+        
+        generarHilos(cantHilos);
     }
-
-    /**
-     * Mescla un array con Knut's algorithm.
-     * ...
-     */
-    public void shuffle(int[] array) {
-        Random random = new Random();
-        int i = 0;
-        for (int j : random.ints(array.length, 0, array.length).toArray()) {
-            swap(array, i++, j);
+    
+    private void generarHilos(int cantHilos){
+        this.hilos = new ArrayList<>();
+        
+        Thread hilo;
+        for (int i = 0; i < cantHilos; i++) {
+            hilo = new Thread(this);
+            this.hilos.add(hilo);
         }
     }
     
-    private void actualizarParticulas(){
-        Particula particula;
-        
-        int posFila = Pantalla.alto - 1;
-        
-        int[] columna = IntStream.rangeClosed(0, Pantalla.ancho - 1).toArray();
-        
-        while(posFila >= 0){
-            shuffle(columna);
-            
-            for (int i : columna) {
-                particula = Pantalla.pixeles.get(posFila).get(i).getParticula();
-                if(particula != null){
-                    if(particula.isActualizar()){
-                        particula.comportamiento();
-                        if(particula.isElementoGaseoso())
-                            particula.setActualizar(false);
-                    }
-                    else if(particula.isElementoGaseoso() || particula.isParticulaExplocion())
-                        particula.setActualizar(true);
-                    
+    public void actualizar() throws InterruptedException{
+        boolean continuar = false;
+        while(!continuar){
+            continuar = true;
+            for (Thread h : hilos) {
+                if(h.isAlive()){
+                    continuar = false;
+                    break;
                 }
             }
-            posFila--;
         }
+        
+        for (Casilla casillaFila = this.casillaInicio; casillaFila != null; casillaFila = casillaFila.getCasillaAbj()) {
+            for (Casilla casillaCol = casillaFila; casillaCol != null; casillaCol = casillaCol.getCasillaDer()) {
+                casillaCol.pintar();
+            }
+        }
+    }
+    
+    private void actualizarParticula(){
+        int posHilo = 0;
+        for (int i = 0; i < this.hilos.size(); i++) {
+            if(this.hilos.get(i).getId() == Thread.currentThread().getId()){
+                posHilo = i;
+                break;
+            }
+        }
+        
+        this.casillaInicio.actualizar(posHilo, this.hilos.size());
+    }
+    
+    public void generarParticula(int x, int y){
+        if(x >= 0 && y >= 0){
+            Casilla casilla = getCasilla(x, y);
+            if(casilla != null){
+                x -= casilla.getX();
+                y -= casilla.getY();
+                casilla.generarParticula(x, y);
+            }
+        }
+    }
+    
+    /**
+     * Busca la casilla que contenga la coordenada indicada.
+     * La coordenada corresponde a la de una particula en 
+     * en el plano carteciano general de la matriz.
+     * 
+     * @param x
+     * @param y
+     * @return 
+     */
+    public Casilla getCasilla(int x, int y){
+        int posX, posY;
+        
+        for (Casilla casillaFila = this.casillaInicio; casillaFila != null; casillaFila = casillaFila.getCasillaAbj()) {
+            for (Casilla casillaCol = casillaFila; casillaCol != null; casillaCol = casillaCol.getCasillaDer()) {
+                posX = casillaCol.getX();
+                posY = casillaCol.getY();
+                if(posX <= x && x < posX + Casilla.size * Particula.getSize() 
+                && posY <= y && y < posY + Casilla.size * Particula.getSize())
+                    return casillaCol;
+            }
+        }
+        
+        return null;
     }
     
     @Override
     public void run() {
-        while(true){
-            actualizarParticulas();
-            
-            try{
-                Thread.sleep(25);
-            }catch(Throwable e){}
-        }
+        actualizarParticula();
     }
+    
+    
 }

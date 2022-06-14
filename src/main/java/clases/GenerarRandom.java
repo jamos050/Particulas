@@ -5,8 +5,8 @@
 package clases;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.Random;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  *
@@ -15,7 +15,7 @@ import java.util.Random;
 public class GenerarRandom implements Runnable{
     private static GenerarRandom entidad = null;
     
-    private ArrayList<LinkedList<Double>> listNum;
+    private ArrayList<ConcurrentLinkedQueue<Double>> listNum;
     
     private int max; // Cntidad máxima de números por sub lista
     private int listCant; // Cantidad de subListas a generar
@@ -58,16 +58,18 @@ public class GenerarRandom implements Runnable{
     
     
     private void iniciar(){
-        this.listNum = new ArrayList<LinkedList<Double>>();
+        this.listNum = new ArrayList<>();
         for (int i = 0; i < this.listCant; i++)
-            this.listNum.add(new LinkedList<Double>());
+            this.listNum.add(new ConcurrentLinkedQueue<>());
         
         Thread t = new Thread(this);
         t.start();
     }
     
     private void generar(){
-        for (LinkedList<Double> L : listNum) {
+        for (int i = 0; i < this.listCant; i++) {
+            ConcurrentLinkedQueue<Double> L = this.listNum.get(i);
+            
             if(L.size() >= this.max)
                 continue;
             
@@ -77,7 +79,7 @@ public class GenerarRandom implements Runnable{
     
     public void addLista(int cant){
         for (int i = 0; i < cant; i++){
-            this.listNum.add(new LinkedList<Double>());
+            this.listNum.add(new ConcurrentLinkedQueue<Double>());
             this.listCant++;
         }
     }
@@ -96,7 +98,7 @@ public class GenerarRandom implements Runnable{
         
         double num;
         if(!this.listNum.get(posList).isEmpty()) // si se ha generado un número lo retorna
-            num = this.listNum.get(posList).pollFirst();
+            num = this.listNum.get(posList).poll();
         else
             num = this.random.nextDouble(); // si no, lo genera
             
@@ -115,16 +117,7 @@ public class GenerarRandom implements Runnable{
      * Retorna un número entre 0 y max, excluyendo max.
      */
     public double getNum(int posList, double max){
-        if(posList > this.listCant - 1)
-            posList = 0;
-        
-        double num;
-        if(!this.listNum.get(posList).isEmpty()) // si se ha generado un número lo retorna
-            num = this.listNum.get(posList).pollFirst();
-        else
-            num = this.random.nextDouble(); // si no, lo genera
-            
-        return num * max;
+        return getNum(posList) * max;
     }
     
     /**
@@ -141,16 +134,11 @@ public class GenerarRandom implements Runnable{
      * Retorna un número entre min y max, excluyendo max.
      */
     public double getNum(int posList, double max, double min){
-        if(posList > this.listCant - 1)
-            posList = 0;
-        
-        double num;
-        if(!this.listNum.get(posList).isEmpty()) // si se ha generado un número lo retorna
-            num = this.listNum.get(posList).pollFirst();
-        else
-            num = this.random.nextDouble(); // si no, lo genera
-        
-        return (num * (max - min)) + min;
+        return (getNum(posList) * (max - min)) + min;
+    }
+
+    public void setMax(int max) {
+        this.max = max;
     }
     
     @Override
