@@ -6,6 +6,7 @@
 package particulas;
 
 import clases.Casilla;
+import clases.ControladorParticulas;
 import java.awt.Color;
 
 
@@ -44,8 +45,10 @@ public class Particula {
         this.y = y;
     }
     
-    public void actualizar(){
-        
+    public void actualizar(int hilo){
+        this.color = new Color((int) ControladorParticulas.random.getNum(hilo, 256)
+                                , (int) ControladorParticulas.random.getNum(hilo, 256)
+                                , (int) ControladorParticulas.random.getNum(hilo, 256));
     }
 
     public int getX() {

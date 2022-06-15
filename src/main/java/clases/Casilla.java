@@ -14,7 +14,7 @@ public class Casilla {
     public static final int size = 64;
     
     private Particula[][] matriz; 
-    private Integer[] posiciones;
+    private Integer posiciones[];
     
     // Casillas continuas
     private Casilla casillaIzq = null;
@@ -25,6 +25,8 @@ public class Casilla {
     // posición en la que se ubica en pantalla
     private int x;
     private int y;
+    private int xFin;
+    private int yFin;
     
     public Casilla() {
         this.matriz = new Particula[Casilla.size][Casilla.size];
@@ -36,18 +38,18 @@ public class Casilla {
     }
     
     public static Casilla nuevaCasillaInicio(int alto, int ancho){
+        int incremento = Casilla.size * Particula.getSize();
+        
         Casilla casillaInicio = new Casilla();
+        casillaInicio.xFin = incremento;
+        casillaInicio.yFin = incremento;
         
         Casilla casillaIteraColFilaAnt = null; // Casilla de iteración de la fila anterior
         Casilla casillaIteraCol = casillaInicio;
         Casilla casillaIteraFila = casillaInicio;
         
-        
-        int incremento = Casilla.size * Particula.getSize();
-        
         alto += incremento;
         ancho += incremento;
-        
         for (int posYIni = 0; posYIni < alto; posYIni += incremento) {
             for (int posXIni = 0; posXIni + incremento < ancho; posXIni += incremento) {
                 // Define la casilla derecha
@@ -56,8 +58,10 @@ public class Casilla {
                 casillaIteraCol.casillaDer.casillaIzq = casillaIteraCol;
                 
                 // actualiza la posición de la casilla
-                casillaIteraCol.casillaDer.x += casillaIteraCol.x + incremento;
+                casillaIteraCol.casillaDer.x += casillaIteraCol.xFin;
                 casillaIteraCol.casillaDer.y += casillaIteraCol.y;
+                casillaIteraCol.casillaDer.xFin += casillaIteraCol.xFin + incremento;
+                casillaIteraCol.casillaDer.yFin += casillaIteraCol.yFin;
                 
                 if(casillaIteraColFilaAnt != null){
                     // Pasa a la siguiente casilla ya que se definió 
@@ -78,7 +82,9 @@ public class Casilla {
                 
                 // actualiza la posición de la casilla
                 casillaIteraFila.casillaAbj.x += casillaIteraFila.x;
-                casillaIteraFila.casillaAbj.y += casillaIteraFila.y + incremento;
+                casillaIteraFila.casillaAbj.y += casillaIteraFila.yFin;
+                casillaIteraFila.casillaAbj.xFin += casillaIteraFila.xFin;
+                casillaIteraFila.casillaAbj.yFin += casillaIteraFila.yFin + incremento;
                 
                 // La casilla iteración columna fila anterior
                 casillaIteraColFilaAnt = casillaIteraFila; 
@@ -102,27 +108,21 @@ public class Casilla {
     public void actualizar(int hilo, int cantHilos){
         int pos;
         int posVal; // valor guardado en pos
+        
         Particula particula;
-        for (int i = 0; i < 2; i++) {
-            int posIni = hilo * 2;
-            
-            if(i == 1)
-                posIni++;
-            
-            for (int j = posIni; j < Casilla.size; j += cantHilos*2) {
-                for (int tam = Casilla.size; tam > 0; tam--) {
-                    pos = (int) ControladorParticulas.random.getNum(hilo, tam);
+        for (int i = 0; i < Casilla.size; i++) {
+            for (int tam = Casilla.size; tam > 0; tam--) {
+                pos = (int) ControladorParticulas.random.getNum(hilo, tam);
 
-                    particula = this.matriz[j][this.posiciones[pos]];
-                    if(particula != null)
-                        particula.actualizar();
+                particula = this.matriz[i][this.posiciones[pos]];
+                if(particula != null)
+                    particula.actualizar(hilo);
 
-                    // pasa el número seleccionado a la ultima posición
-                    posVal = this.posiciones[pos];
-                    this.posiciones[pos] = this.posiciones[tam - 1];
-                    this.posiciones[tam - 1] = posVal;
+                // pasa el número seleccionado a la ultima posición
+                posVal = this.posiciones[pos];
+                this.posiciones[pos] = this.posiciones[tam - 1];
+                this.posiciones[tam - 1] = posVal;
 
-                }
             }
         }
     }
@@ -145,7 +145,8 @@ public class Casilla {
         x /= particulaTam;
         y /= particulaTam;
         
-        this.matriz[y][x] = new Particula(this, x, y);
+        if(x < Casilla.size && y < Casilla.size && this.matriz[y][x] == null)
+            this.matriz[y][x] = new Particula(this, x, y);
     }
     
     /**
@@ -153,7 +154,9 @@ public class Casilla {
      * de no encontrarla retorna null.
      * 
      * @param x
+     * Coordenada x en casilla
      * @param y
+     * Coordenada y en casilla
      * @return 
      * Partícula en coordenada indicada o null.
      */
@@ -213,6 +216,13 @@ public class Casilla {
     public int getY() {
         return y;
     }
-    
+
+    public int getXFin() {
+        return xFin;
+    }
+
+    public int getYFin() {
+        return yFin;
+    }
     
 }

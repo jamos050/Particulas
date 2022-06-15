@@ -5,7 +5,6 @@
 package clases;
 
 import java.util.ArrayList;
-import particulas.Particula;
 
 /**
  *
@@ -38,6 +37,9 @@ public class ControladorParticulas implements Runnable{
     }
     
     public void actualizar() throws InterruptedException{
+        for (Thread h : hilos)
+            h.start();
+        
         boolean continuar = false;
         while(!continuar){
             continuar = true;
@@ -48,6 +50,8 @@ public class ControladorParticulas implements Runnable{
                 }
             }
         }
+        
+        generarHilos(this.hilos.size());
         
         for (Casilla casillaFila = this.casillaInicio; casillaFila != null; casillaFila = casillaFila.getCasillaAbj()) {
             for (Casilla casillaCol = casillaFila; casillaCol != null; casillaCol = casillaCol.getCasillaDer()) {
@@ -65,12 +69,31 @@ public class ControladorParticulas implements Runnable{
             }
         }
         
-        this.casillaInicio.actualizar(posHilo, this.hilos.size());
+        int posFila;
+        int posFilaAct; // posición de la fila a actualizar
+        int cantHilos = this.hilos.size();
+        for (int i = 0; i < 2; i++) {
+            posFila = 0;
+            posFilaAct = posHilo*2;
+            
+            if(i == 1)
+                posFilaAct++;
+            
+            for (Casilla casillaFila = this.casillaInicio; casillaFila != null; casillaFila = casillaFila.getCasillaAbj()) {
+                if(posFila == posFilaAct){
+                    for (Casilla casillaCol = casillaFila; casillaCol != null; casillaCol = casillaCol.getCasillaDer()) {
+                        casillaCol.actualizar(posHilo, cantHilos);
+                    }
+                    posFilaAct += cantHilos*2;
+                }
+                posFila++;
+            }
+        }
     }
     
     public void generarParticula(int x, int y){
         if(x >= 0 && y >= 0){
-            Casilla casilla = getCasilla(x, y);
+            Casilla casilla = getCasillaRango(x, y);
             if(casilla != null){
                 x -= casilla.getX();
                 y -= casilla.getY();
@@ -80,23 +103,19 @@ public class ControladorParticulas implements Runnable{
     }
     
     /**
-     * Busca la casilla que contenga la coordenada indicada.
+     * Busca la casilla que contenga en su rango la coordenada indicada.
      * La coordenada corresponde a la de una particula en 
-     * en el plano carteciano general de la matriz.
+     * en el plano carteciano de la pantalla.
      * 
      * @param x
      * @param y
      * @return 
      */
-    public Casilla getCasilla(int x, int y){
-        int posX, posY;
-        
+    public Casilla getCasillaRango(int x, int y){
         for (Casilla casillaFila = this.casillaInicio; casillaFila != null; casillaFila = casillaFila.getCasillaAbj()) {
             for (Casilla casillaCol = casillaFila; casillaCol != null; casillaCol = casillaCol.getCasillaDer()) {
-                posX = casillaCol.getX();
-                posY = casillaCol.getY();
-                if(posX <= x && x < posX + Casilla.size * Particula.getSize() 
-                && posY <= y && y < posY + Casilla.size * Particula.getSize())
+                if(casillaCol.getX() <= x && x < casillaCol.getXFin()
+                && casillaCol.getY() <= y && y < casillaCol.getYFin())
                     return casillaCol;
             }
         }
