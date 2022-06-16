@@ -4,6 +4,7 @@
  */
 package clases;
 
+import java.util.ArrayList;
 import particulas.Particula;
 
 /**
@@ -16,86 +17,29 @@ public class Casilla {
     private Particula[][] matriz; 
     private Integer posiciones[];
     
-    // Casillas continuas
-    private Casilla casillaIzq = null;
-    private Casilla casillaDer = null;
-    private Casilla casillaArb = null;
-    private Casilla casillaAbj = null;
-    
     // posición en la que se ubica en pantalla
-    private int x;
-    private int y;
+    private int xIni;
+    private int yIni;
     private int xFin;
     private int yFin;
     
-    public Casilla() {
+    // posición en matrizCasillas
+    private int posX;
+    private int posY;
+
+    public Casilla(int xIni, int yIni, int xFin, int yFin, int posX, int posY) {
+        this.xIni = xIni;
+        this.yIni = yIni;
+        
+        this.xFin = xFin;
+        this.yFin = yFin;
+        
+        this.posX = posX;
+        this.posY = posY;
+        
         this.matriz = new Particula[Casilla.size][Casilla.size];
         
-        this.x = 0;
-        this.y = 0;
-        
         definirPosicionesArray();
-    }
-    
-    public static Casilla nuevaCasillaInicio(int alto, int ancho){
-        int incremento = Casilla.size * Particula.getSize();
-        
-        Casilla casillaInicio = new Casilla();
-        casillaInicio.xFin = incremento;
-        casillaInicio.yFin = incremento;
-        
-        Casilla casillaIteraColFilaAnt = null; // Casilla de iteración de la fila anterior
-        Casilla casillaIteraCol = casillaInicio;
-        Casilla casillaIteraFila = casillaInicio;
-        
-        alto += incremento;
-        ancho += incremento;
-        for (int posYIni = 0; posYIni < alto; posYIni += incremento) {
-            for (int posXIni = 0; posXIni + incremento < ancho; posXIni += incremento) {
-                // Define la casilla derecha
-                casillaIteraCol.casillaDer = new Casilla();
-                // Define la casilla izquierda
-                casillaIteraCol.casillaDer.casillaIzq = casillaIteraCol;
-                
-                // actualiza la posición de la casilla
-                casillaIteraCol.casillaDer.x += casillaIteraCol.xFin;
-                casillaIteraCol.casillaDer.y += casillaIteraCol.y;
-                casillaIteraCol.casillaDer.xFin += casillaIteraCol.xFin + incremento;
-                casillaIteraCol.casillaDer.yFin += casillaIteraCol.yFin;
-                
-                if(casillaIteraColFilaAnt != null){
-                    // Pasa a la siguiente casilla ya que se definió 
-                    // la casilla derecha de la fila actual
-                    casillaIteraColFilaAnt = casillaIteraColFilaAnt.casillaDer;
-                    
-                    casillaIteraCol.getCasillaDer().casillaArb = casillaIteraColFilaAnt;
-                }
-                
-                // Cambia la casilla de iteración a la siguiente
-                casillaIteraCol = casillaIteraCol.casillaDer;
-            }
-            if(posYIni + incremento < alto){
-                // Define la casilla de abajo
-                casillaIteraFila.casillaAbj = new Casilla();
-                // Define la casilla de arriba
-                casillaIteraFila.casillaAbj.casillaArb = casillaIteraFila;
-                
-                // actualiza la posición de la casilla
-                casillaIteraFila.casillaAbj.x += casillaIteraFila.x;
-                casillaIteraFila.casillaAbj.y += casillaIteraFila.yFin;
-                casillaIteraFila.casillaAbj.xFin += casillaIteraFila.xFin;
-                casillaIteraFila.casillaAbj.yFin += casillaIteraFila.yFin + incremento;
-                
-                // La casilla iteración columna fila anterior
-                casillaIteraColFilaAnt = casillaIteraFila; 
-
-                // Cambia las casillas de iteración
-                casillaIteraFila = casillaIteraFila.casillaAbj;
-                casillaIteraCol = casillaIteraFila;
-            }
-        }
-        
-        return casillaInicio;
     }
     
     private void definirPosicionesArray(){
@@ -110,14 +54,14 @@ public class Casilla {
         int posVal; // valor guardado en pos
         
         Particula particula;
-        for (int i = 0; i < Casilla.size; i++) {
+        for (int i = Casilla.size - 1; i >= 0; i--) {
             for (int tam = Casilla.size; tam > 0; tam--) {
                 pos = (int) ControladorParticulas.random.getNum(hilo, tam);
 
                 particula = this.matriz[i][this.posiciones[pos]];
-                if(particula != null)
+                if(particula != null && !particula.isActualizada())
                     particula.actualizar(hilo);
-
+                
                 // pasa el número seleccionado a la ultima posición
                 posVal = this.posiciones[pos];
                 this.posiciones[pos] = this.posiciones[tam - 1];
@@ -125,9 +69,17 @@ public class Casilla {
 
             }
         }
+        
+        for (Particula[] fila : matriz) {
+            for (Particula p : fila) {
+                if(p != null){
+                    p.setActualizada(false);
+                }
+            }
+        }
     }
     
-    void pintar() {
+    public void pintar() {
         for (Particula[] fila : matriz) {
             for (Particula p : fila) {
                 if(p == null)
@@ -149,74 +101,45 @@ public class Casilla {
             this.matriz[y][x] = new Particula(this, x, y);
     }
     
-    /**
-     * Retorna la partícula en la posición indicada,
-     * de no encontrarla retorna null.
-     * 
-     * @param x
-     * Coordenada x en casilla
-     * @param y
-     * Coordenada y en casilla
-     * @return 
-     * Partícula en coordenada indicada o null.
-     */
-    public Particula getParticula(int x, int y){
-        Particula particula = null;
-        
-        if(x < Casilla.size && x >= 0 && y < Casilla.size && y >= 0)
-            particula = this.matriz[x][y];
-        else{
-            Casilla casilla = this;
-            
-            if(x < 0 && this.casillaIzq != null){
-                casilla =  this.casillaIzq;
-                x = Casilla.size + x;
-            }
-            else if(x >= Casilla.size && this.casillaDer != null){
-                casilla =  this.casillaDer;
-                x = Casilla.size - x;
-            }
-            
-            if(y < 0 && casilla.casillaArb != null){
-                casilla = casilla.casillaArb;
-                y = Casilla.size + y;
-            }
-            else if(y >= Casilla.size && casilla.casillaAbj != null){
-                casilla = casilla.casillaAbj;
-                y = Casilla.size - y;
-            }
-            
-            if(casilla != this)
-                particula = casilla.getParticula(x, y);
-        }
-        
-        return particula;
+    public void borrarParticula(int x, int y){
+        this.matriz[y][x] = null;
     }
     
-    public Casilla getCasillaIzq() {
-        return casillaIzq;
+    /**
+     * Mueve la particula a la coordenada de la pantalla indicada.
+     * @param x
+     * @param y
+     * @param particula
+     * Particula a mover
+     * @param remplazar 
+     */
+    public void moverParticula(int x, int y, Particula particula, boolean remplazar){
+        Casilla casilla = ControladorParticulas.getCasillaRango(x, y);
+        
+        if(casilla != null){
+            // Coordanada en la matriz
+            int x2 = (x - casilla.xIni) / Particula.getSize();
+            int y2 = (y - casilla.yIni) / Particula.getSize();
+
+            if(remplazar || casilla.matriz[y2][x2] == null){
+                particula.getCasilla().borrarParticula(particula.getX(), particula.getY());
+
+                particula.setCasilla(casilla);
+                particula.setX(x2);
+                particula.setY(y2);
+                casilla.matriz[y2][x2] = particula;
+            }
+        }
     }
 
-    public Casilla getCasillaDer() {
-        return casillaDer;
+    public int getXIni() {
+        return xIni;
     }
 
-    public Casilla getCasillaArb() {
-        return casillaArb;
+    public int getYIni() {
+        return yIni;
     }
-
-    public Casilla getCasillaAbj() {
-        return casillaAbj;
-    }
-
-    public int getX() {
-        return x;
-    }
-
-    public int getY() {
-        return y;
-    }
-
+    
     public int getXFin() {
         return xFin;
     }
@@ -224,5 +147,14 @@ public class Casilla {
     public int getYFin() {
         return yFin;
     }
+
+    public int getPosX() {
+        return posX;
+    }
+
+    public int getPosY() {
+        return posY;
+    }
+    
     
 }

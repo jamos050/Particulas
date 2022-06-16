@@ -31,7 +31,7 @@ public class Raton implements MouseListener, MouseWheelListener{
         Point b = a.getLocation();
         
         x = (int) b.getX();
-        y = (int) (b.getY() - 23);
+        y = (int) (b.getY() - 25);
     }
     
     // is

@@ -43,7 +43,7 @@ public class Pantalla extends JFrame implements Runnable{
     public Pantalla(){
         iniciarVentana();
         
-        this.controladorP = new ControladorParticulas(this.ventana_alto, this.ventana_ancho, 2);
+        this.controladorP = new ControladorParticulas(this.ventana_alto, this.ventana_ancho, 4);
         
         this.raton = new Raton();
         addMouseListener(this.raton);
@@ -146,6 +146,7 @@ public class Pantalla extends JFrame implements Runnable{
                 
                 try {
                     this.controladorP.actualizar();
+                    this.controladorP.pintar();
                     generarFrame();
                     
                     raton();

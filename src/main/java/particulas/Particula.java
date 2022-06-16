@@ -22,6 +22,8 @@ public class Particula {
     
     private Color color;
     
+    private boolean actualizada = false;
+    
     private double friccion;
     private double aceleracion;
     
@@ -49,8 +51,16 @@ public class Particula {
         this.color = new Color((int) ControladorParticulas.random.getNum(hilo, 256)
                                 , (int) ControladorParticulas.random.getNum(hilo, 256)
                                 , (int) ControladorParticulas.random.getNum(hilo, 256));
+        
+        this.casilla.moverParticula(getXPantalla(), getYPantalla() + Particula.getSize(), this, false);
+        
+        this.actualizada = true;
     }
 
+    public boolean isActualizada() {
+        return actualizada;
+    }
+    
     public int getX() {
         return x;
     }
@@ -60,19 +70,41 @@ public class Particula {
     }
     
     public int getXPantalla() {
-        return (x * Particula.getSize()) + this.casilla.getX();
+        return (x * Particula.getSize()) + this.casilla.getXIni();
     }
 
     public int getYPantalla() {
-        return (y * Particula.getSize()) + this.casilla.getY();
+        return (y * Particula.getSize()) + this.casilla.getYIni();
     }
 
     public Color getColor() {
         return color;
     }
 
+    public Casilla getCasilla() {
+        return casilla;
+    }
+    
     public static int getSize() {
         return size;
     }
+
+    public void setActualizada(boolean actualizada) {
+        this.actualizada = actualizada;
+    }
+    
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    public void setY(int y) {
+        this.y = y;
+    }
+
+    public void setCasilla(Casilla casilla) {
+        this.casilla = casilla;
+    }
+    
+    
     
 }
