@@ -18,6 +18,7 @@ import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import particulas.Particula;
 
 /**
  *
@@ -43,7 +44,7 @@ public class Pantalla extends JFrame implements Runnable{
     public Pantalla(){
         iniciarVentana();
         
-        this.controladorP = new ControladorParticulas(this.ventana_alto, this.ventana_ancho, 4);
+        this.controladorP = new ControladorParticulas(this.ventana_alto, this.ventana_ancho, 3);
         
         this.raton = new Raton();
         addMouseListener(this.raton);
@@ -71,7 +72,7 @@ public class Pantalla extends JFrame implements Runnable{
         this.bufferedImageGUI = new BufferedImage(this.ventana_ancho, this.ventana_alto, BufferedImage.TYPE_INT_ARGB);
         
         g2d = bufferedImage.createGraphics();
-        g2d.setBackground(Color.WHITE);
+        g2d.setBackground(Particula.COLOR_FONDO);
         g2d.setColor(g2d.getBackground());
         g2d.fillRect(0, 0, this.ventana_ancho, this.ventana_alto);
         

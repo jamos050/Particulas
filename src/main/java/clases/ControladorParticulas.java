@@ -19,7 +19,12 @@ public class ControladorParticulas implements Runnable{
     
     private ArrayList<Thread> hilos;
     
+    private static double gravedadX,gravedadY;
+    
     public ControladorParticulas(int alto, int ancho, int cantHilos) {
+        ControladorParticulas.gravedadX = 0;
+        ControladorParticulas.gravedadY = 1;
+        
         generarMatrizCasillas(alto, ancho);
         
         ControladorParticulas.random.addLista(cantHilos - 1);
@@ -112,10 +117,13 @@ public class ControladorParticulas implements Runnable{
             
             int cantFilas = ControladorParticulas.matrizCasillas.size();
             int cantColum = ControladorParticulas.matrizCasillas.get(0).size();
+            Casilla casilla;
             for (int j = 0; j < cantFilas; j++) {
                 if(posFila == posFilaAct){
                     for (int k = 0; k < cantColum; k++) {
-                        ControladorParticulas.matrizCasillas.get(j).get(k).actualizar(posHilo, cantHilos);
+                        casilla = ControladorParticulas.matrizCasillas.get(j).get(k);
+                        if(!casilla.isNull())
+                            casilla.actualizar(posHilo, cantHilos);
                     }
                     posFilaAct += cantHilos*2;
                 }
@@ -133,6 +141,22 @@ public class ControladorParticulas implements Runnable{
             
             casilla.generarParticula(x, y);
         }
+    }
+    
+    public static boolean particulaIsNull(int x, int y){
+        if(x >= 0 && y >= 0){
+            Casilla casilla = getCasillaRango(x, y);
+            
+            if(casilla == null)
+                return false;
+            
+            x -= casilla.getXIni();
+            y -= casilla.getYIni();
+            
+            return casilla.getParticula(x, y) == null;
+        }
+        
+        return false;
     }
     
     /**
@@ -167,7 +191,14 @@ public class ControladorParticulas implements Runnable{
         
         return casilla;
     }
-    
+
+    public static double getGravedadX() {
+        return gravedadX;
+    }
+
+    public static double getGravedadY() {
+        return gravedadY;
+    }
     
     @Override
     public void run() {

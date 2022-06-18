@@ -15,7 +15,7 @@ import java.awt.Color;
  * @author Josue Alvarez M
  */
 public class Particula {
-    private static int size = 4;
+    private static int size = 2;
     
     private int x, y;           // Posición en la matriz casilla
     private Casilla casilla;    // Casilla en la que está la partícula
@@ -27,15 +27,20 @@ public class Particula {
     private double friccion;
     private double aceleracion;
     
-    public static final Color COLORPRED = Color.BLACK;
+    private double movimientoX, movimientoY;
+    
+    public static final Color COLOR_FONDO = Color.WHITE;
+    public static final Color COLOR_PRED = Color.BLACK;
 
     public Particula(Casilla casilla, int x, int y) {
-        this.color = Particula.COLORPRED;
+        this.color = Particula.COLOR_PRED;
         
         this.casilla = casilla;
         
         this.x = x;
         this.y = y;
+        
+        setValorBasicos();
     }
 
     public Particula(Casilla casilla, int x, int y, Color color) {
@@ -45,6 +50,37 @@ public class Particula {
         
         this.x = x;
         this.y = y;
+        
+        setValorBasicos();
+    }
+    
+    private void setValorBasicos(){
+        this.friccion = 0;
+        this.aceleracion = 1;
+        
+        this.movimientoX = 0;
+        this.movimientoY = 0;
+    }
+    
+    private void accelerar(){
+        // coordenadas en pantalla
+        int x = getXPantalla();
+        int y = getYPantalla();
+        
+        double gravedadX = ControladorParticulas.getGravedadX();
+        double gravedadY = ControladorParticulas.getGravedadY();
+        
+        if(gravedadY != 0){
+            int incrementoY = (int) (Math.abs(gravedadY) / gravedadY);
+            if(ControladorParticulas.particulaIsNull(x, y + (Particula.getSize() * incrementoY)))
+                this.movimientoY += this.aceleracion * gravedadY;
+        }
+        
+        if(gravedadX != 0){
+            int incrementoX = (int) (Math.abs(gravedadX) / gravedadX);
+            if(ControladorParticulas.particulaIsNull(x + (Particula.getSize() * incrementoX), y))
+                this.movimientoX += this.aceleracion * gravedadX;
+        }
     }
     
     public void actualizar(int hilo){
@@ -52,7 +88,29 @@ public class Particula {
                                 , (int) ControladorParticulas.random.getNum(hilo, 256)
                                 , (int) ControladorParticulas.random.getNum(hilo, 256));
         
-        this.casilla.moverParticula(getXPantalla(), getYPantalla() + Particula.getSize(), this, false);
+        accelerar();
+        
+        boolean movX = Math.abs(this.movimientoX) - 1 >= 0;
+        boolean movY = Math.abs(this.movimientoY) - 1 >= 0;
+        while(movX || movY){
+            int incrementoY = 0;
+            int incrementoX = 0;
+            
+            if(movY){
+                incrementoY = (int) (Math.abs(this.movimientoY) / this.movimientoY);
+                this.movimientoY -= incrementoY;
+            }
+            
+            if(movX){
+                incrementoX = (int) (Math.abs(this.movimientoX) / this.movimientoX);
+                this.movimientoX -= incrementoX;
+            }
+            
+            this.casilla.moverParticula(getXPantalla() + (Particula.getSize() * incrementoX), getYPantalla() + (Particula.getSize() * incrementoY), this, false);
+            
+            movX = Math.abs(this.movimientoX) - 1 >= 0;
+            movY = Math.abs(this.movimientoY) - 1 >= 0;
+        }
         
         this.actualizada = true;
     }

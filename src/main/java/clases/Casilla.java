@@ -26,7 +26,9 @@ public class Casilla {
     // posición en matrizCasillas
     private int posX;
     private int posY;
-
+    
+    private int cantParticulas;
+    
     public Casilla(int xIni, int yIni, int xFin, int yFin, int posX, int posY) {
         this.xIni = xIni;
         this.yIni = yIni;
@@ -97,12 +99,15 @@ public class Casilla {
         x /= particulaTam;
         y /= particulaTam;
         
-        if(x < Casilla.size && y < Casilla.size && this.matriz[y][x] == null)
+        if(x < Casilla.size && y < Casilla.size){
             this.matriz[y][x] = new Particula(this, x, y);
+            this.cantParticulas++;
+        }
     }
     
     public void borrarParticula(int x, int y){
         this.matriz[y][x] = null;
+        this.cantParticulas--;
     }
     
     /**
@@ -113,7 +118,7 @@ public class Casilla {
      * Particula a mover
      * @param remplazar 
      */
-    public void moverParticula(int x, int y, Particula particula, boolean remplazar){
+    public boolean moverParticula(int x, int y, Particula particula, boolean remplazar){
         Casilla casilla = ControladorParticulas.getCasillaRango(x, y);
         
         if(casilla != null){
@@ -123,15 +128,41 @@ public class Casilla {
 
             if(remplazar || casilla.matriz[y2][x2] == null){
                 particula.getCasilla().borrarParticula(particula.getX(), particula.getY());
-
+                
+                casilla.cantParticulas++;
                 particula.setCasilla(casilla);
                 particula.setX(x2);
                 particula.setY(y2);
                 casilla.matriz[y2][x2] = particula;
+                
+                return true;
             }
         }
+        
+        return false;
     }
-
+    
+    /**
+     * Retorna true si la cantidad de particulas
+     * contenidas en la casilla es 0.
+     * @return 
+     */
+    public boolean isNull(){
+        return this.cantParticulas == 0;
+    }
+    
+    public Particula getParticula(int x, int y){
+        int particulaTam = Particula.getSize();
+        
+        x /= particulaTam;
+        y /= particulaTam;
+        
+        if(x < Casilla.size && y < Casilla.size)
+            return this.matriz[y][x];
+        
+        return null;
+    }
+    
     public int getXIni() {
         return xIni;
     }
