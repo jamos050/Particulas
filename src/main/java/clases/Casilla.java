@@ -4,7 +4,7 @@
  */
 package clases;
 
-import java.util.ArrayList;
+import java.awt.Color;
 import particulas.Particula;
 
 /**
@@ -14,8 +14,11 @@ import particulas.Particula;
 public class Casilla {
     public static final int size = 64;
     
-    private Particula[][] matriz; 
-    private Integer posiciones[];
+    private final Particula[][] matriz; 
+    
+    private final Particula[] particulasArr;
+    private final int partArr_tam; // tamaño del arreglo de partículas
+    private int posFinArr; // ultima posición disponible del array
     
     // posición en la que se ubica en pantalla
     private int xIni;
@@ -26,8 +29,6 @@ public class Casilla {
     // posición en matrizCasillas
     private int posX;
     private int posY;
-    
-    private int cantParticulas;
     
     public Casilla(int xIni, int yIni, int xFin, int yFin, int posX, int posY) {
         this.xIni = xIni;
@@ -41,56 +42,81 @@ public class Casilla {
         
         this.matriz = new Particula[Casilla.size][Casilla.size];
         
-        definirPosicionesArray();
+        this.partArr_tam = Casilla.size * Casilla.size;
+        this.particulasArr = new Particula[this.partArr_tam];
+        this.posFinArr = 0;
     }
     
-    private void definirPosicionesArray(){
-        this.posiciones = new Integer[Casilla.size];
-        
-        for (int i = 0; i < Casilla.size; i++)
-            this.posiciones[i] = i;
-    }
-    
-    public void actualizar(int hilo, int cantHilos){
+    public void actualizar(int hilo){
         int pos;
-        int posVal; // valor guardado en pos
         
         Particula particula;
-        for (int i = Casilla.size - 1; i >= 0; i--) {
-            for (int tam = Casilla.size; tam > 0; tam--) {
-                pos = (int) ControladorParticulas.random.getNum(hilo, tam);
-
-                particula = this.matriz[i][this.posiciones[pos]];
-                if(particula != null && !particula.isActualizada())
-                    particula.actualizar(hilo);
-                
-                // pasa el número seleccionado a la ultima posición
-                posVal = this.posiciones[pos];
-                this.posiciones[pos] = this.posiciones[tam - 1];
-                this.posiciones[tam - 1] = posVal;
-
-            }
-        }
-        
-        for (Particula[] fila : matriz) {
-            for (Particula p : fila) {
-                if(p != null){
-                    p.setActualizada(false);
-                }
-            }
+        for (int i = this.posFinArr; i > 0; i--) {
+            pos = (int) ControladorParticulas.random.getNum(hilo, i);
+            
+            particula = this.particulasArr[pos];
+            
+            // Pasa la partícula al final del array
+            particula.setPosArr(i - 1);
+            this.particulasArr[i - 1].setPosArr(pos);
+            this.particulasArr[pos] = this.particulasArr[i - 1];
+            this.particulasArr[i - 1] = particula;
+            
+            particula.actualizar(hilo);
+            
         }
     }
     
     public void pintar() {
-        for (Particula[] fila : matriz) {
-            for (Particula p : fila) {
-                if(p == null)
-                    continue;
-                
-                Pantalla.g2d.setColor(p.getColor());
-                Pantalla.g2d.fillRect(p.getXPantalla(), p.getYPantalla(), Particula.getSize(), Particula.getSize());
-            }
+        // coordenadas en pantalla
+        int xAnt, yAnt;
+        int x, y;
+        
+        Casilla casillaAnt;
+        Casilla casilla;
+        
+        for (Particula particula : particulasArr){
+            if(particula == null)
+                continue;
+            
+            xAnt = particula.getXAntPantalla();
+            yAnt = particula.getYAntPantalla();
+            casillaAnt = particula.getCasillaAnt();
+            
+            x = particula.getXPantalla();
+            y = particula.getYPantalla();
+            casilla = particula.getCasilla();
+            
+            if(xAnt != x || yAnt != y || casillaAnt != casilla)
+                Pantalla.getG2d().clearRect(xAnt, yAnt, Particula.getSize(), Particula.getSize());
         }
+        
+        for (Particula particula : particulasArr){
+            if(particula == null)
+                continue;
+            
+            x = particula.getXPantalla();
+            y = particula.getYPantalla();
+            
+            Pantalla.getG2d().setColor(particula.getColor());
+            Pantalla.getG2d().fillRect(x, y, Particula.getSize(), Particula.getSize());
+            
+            // actualizar posición anterior
+            particula.reiniciarPosAnt();
+        }
+    }
+    
+    public void pintarBorde() {
+        int dim = Particula.getSize() * Casilla.size;
+        
+        Pantalla.getG2d().setColor(Color.BLACK);
+        Pantalla.getG2d().drawRect(this.xIni + 1, this.yIni + 1, dim - 1, dim - 1);
+    }
+    public void quitarBorde() {
+        int dim = Particula.getSize() * Casilla.size;
+        
+        Pantalla.getG2d().setColor(Pantalla.getG2d().getBackground());
+        Pantalla.getG2d().drawRect(this.xIni + 1, this.yIni + 1, dim - 1, dim - 1);
     }
     
     public void generarParticula(int x, int y){
@@ -99,15 +125,23 @@ public class Casilla {
         x /= particulaTam;
         y /= particulaTam;
         
-        if(x < Casilla.size && y < Casilla.size){
-            this.matriz[y][x] = new Particula(this, x, y);
-            this.cantParticulas++;
-        }
+        setParticula(x, y, new Particula(this, x, y, this.posFinArr));
     }
     
     public void borrarParticula(int x, int y){
-        this.matriz[y][x] = null;
-        this.cantParticulas--;
+        Particula particula = this.matriz[y][x];
+        if(particula != null){
+            this.matriz[y][x] = null;
+            
+            int pos = particula.getPosArr();
+            // pasa la ultima partícula a la posición de la partícula eliminada
+            this.particulasArr[this.posFinArr - 1].setPosArr(pos);
+            this.particulasArr[pos] = this.particulasArr[this.posFinArr - 1];
+            // borra la ultima partícula
+            this.particulasArr[this.posFinArr - 1] = null;
+            
+            this.posFinArr--;
+        }
     }
     
     /**
@@ -127,13 +161,9 @@ public class Casilla {
             int y2 = (y - casilla.yIni) / Particula.getSize();
 
             if(remplazar || casilla.matriz[y2][x2] == null){
-                particula.getCasilla().borrarParticula(particula.getX(), particula.getY());
+                borrarParticula(particula.getX(), particula.getY());
                 
-                casilla.cantParticulas++;
-                particula.setCasilla(casilla);
-                particula.setX(x2);
-                particula.setY(y2);
-                casilla.matriz[y2][x2] = particula;
+                casilla.setParticula(x2, y2, particula);
                 
                 return true;
             }
@@ -148,8 +178,25 @@ public class Casilla {
      * @return 
      */
     public boolean isNull(){
-        return this.cantParticulas == 0;
+        return this.posFinArr == 0;
     }
+    
+    public void setParticula(int x, int y, Particula particula){
+        if(x < Casilla.size && y < Casilla.size){
+            borrarParticula(x, y);
+            
+            particula.setCasilla(this);
+            particula.setX(x);
+            particula.setY(y);
+            particula.setPosArr(this.posFinArr);
+            
+            this.particulasArr[this.posFinArr] = particula;
+            this.matriz[y][x] = particula;
+            
+            this.posFinArr++;
+        }
+    }
+    
     
     public Particula getParticula(int x, int y){
         int particulaTam = Particula.getSize();

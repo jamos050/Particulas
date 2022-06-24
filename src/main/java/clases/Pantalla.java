@@ -13,22 +13,19 @@ import java.awt.Graphics2D;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import particulas.Particula;
 
 /**
  *
  * @author Josue Alvarez M
  */
-public class Pantalla extends JFrame implements Runnable{
+public class Pantalla extends JFrame{
     private BufferedImage bufferedImage;
     private BufferedImage bufferedImageGUI;
-    public static Graphics2D g2d;
-    public static Graphics2D g2dGUI;
+    private static Graphics2D g2d;
+    private static Graphics2D g2dGUI;
     
     private JLabel imagen;
     private JLabel imagenGUI;
@@ -36,15 +33,13 @@ public class Pantalla extends JFrame implements Runnable{
     private int ventana_ancho;
     private int ventana_alto;
     
-    private boolean iniciar = false;
-    
     private final ControladorParticulas controladorP;
     private final Raton raton;
     
     public Pantalla(){
         iniciarVentana();
         
-        this.controladorP = new ControladorParticulas(this.ventana_alto, this.ventana_ancho, 3);
+        this.controladorP = new ControladorParticulas(this.ventana_alto, this.ventana_ancho, 1);
         
         this.raton = new Raton();
         addMouseListener(this.raton);
@@ -52,8 +47,6 @@ public class Pantalla extends JFrame implements Runnable{
         
         iniciarPantalla();
         iniciarImagen();
-        
-        this.iniciar = true;
     }
     
     private void iniciarVentana(){
@@ -72,7 +65,7 @@ public class Pantalla extends JFrame implements Runnable{
         this.bufferedImageGUI = new BufferedImage(this.ventana_ancho, this.ventana_alto, BufferedImage.TYPE_INT_ARGB);
         
         g2d = bufferedImage.createGraphics();
-        g2d.setBackground(Particula.COLOR_FONDO);
+        g2d.setBackground(Color.WHITE);
         g2d.setColor(g2d.getBackground());
         g2d.fillRect(0, 0, this.ventana_ancho, this.ventana_alto);
         
@@ -82,7 +75,6 @@ public class Pantalla extends JFrame implements Runnable{
         Pantalla.g2dGUI.setColor(new Color(0f,0f,0f,0f));
         Pantalla.g2dGUI.fillRect(0, 0, this.ventana_ancho, this.ventana_alto);
     }
-    
     private void iniciarImagen(){
         this.imagen = new JLabel();
         this.imagen.setSize(this.ventana_ancho, this.ventana_alto);
@@ -97,16 +89,18 @@ public class Pantalla extends JFrame implements Runnable{
         add(this.imagen);
     }
     
-    private void generarFrame() throws IOException{
+    private void definirImagenBuffer() throws IOException{
         this.imagen.setIcon(new ImageIcon(this.bufferedImage));
         this.imagenGUI.setIcon(new ImageIcon(this.bufferedImageGUI));
     }
     
+    
     private void raton(){
         this.raton.actualizarPosicion();
         
-        if(this.raton.isPresionando())
+        if(this.raton.isPresionando()){
             this.controladorP.generarParticula(this.raton.getX(), this.raton.getY());
+        }
     }
     
     public void limpiarGUI(){
@@ -131,7 +125,7 @@ public class Pantalla extends JFrame implements Runnable{
             limpiarGUI();
             
             //int r = this.raton.getRadio() * 2 * this.pixelTam;
-            Pantalla.g2dGUI.setColor(Color.BLACK);
+            //Pantalla.g2dGUI.setColor(Color.BLACK);
             //Pantalla.g2dGUI.drawOval(this.raton.getX() - r/2, this.raton.getY() - 23 - r/2, r, r);
             
         }catch(Exception e){
@@ -139,30 +133,24 @@ public class Pantalla extends JFrame implements Runnable{
         }
     } 
 
-    @Override
-    public void run() {
+    public void loop() throws IOException, InterruptedException {
+        definirImagenBuffer();
+        
         while(true){
-            if(iniciar){
-                repaint();
-                
-                try {
-                    this.controladorP.actualizar();
-                    this.controladorP.pintar();
-                    generarFrame();
-                    
-                    raton();
-                    
-                } catch (IOException ex) {
-                    Logger.getLogger(Pantalla.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(Pantalla.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                
-            }
+            repaint();
+
+            this.controladorP.actualizar();
+            this.controladorP.pintar(this.ventana_alto, this.ventana_ancho);
+
+            raton();
+
         }
         
         
     }
-    
+
+    public static Graphics2D getG2d() {
+        return g2d;
+    }
     
 }

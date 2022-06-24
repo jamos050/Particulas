@@ -15,41 +15,54 @@ import java.awt.Color;
  * @author Josue Alvarez M
  */
 public class Particula {
-    private static int size = 2;
+    private static int size = 3;
+    
+    private int posArr;
+    
+    private int xAnt, yAnt;     // Posición anterior mostrada en pantalla, en la matriz casilla
+    private Casilla casillaAnt;    // Casilla en la que estaba la partícula
     
     private int x, y;           // Posición en la matriz casilla
     private Casilla casilla;    // Casilla en la que está la partícula
     
     private Color color;
     
-    private boolean actualizada = false;
-    
     private double friccion;
     private double aceleracion;
     
     private double movimientoX, movimientoY;
     
-    public static final Color COLOR_FONDO = Color.WHITE;
     public static final Color COLOR_PRED = Color.BLACK;
 
-    public Particula(Casilla casilla, int x, int y) {
+    public Particula(Casilla casilla, int x, int y, int posArr) {
         this.color = Particula.COLOR_PRED;
         
-        this.casilla = casilla;
+        this.casillaAnt = casilla;
+        this.xAnt = x;
+        this.yAnt = y;
         
+        this.casilla = casilla;
         this.x = x;
         this.y = y;
+        
+        
+        this.posArr = posArr;
         
         setValorBasicos();
     }
 
-    public Particula(Casilla casilla, int x, int y, Color color) {
+    public Particula(Casilla casilla, int x, int y, int posArr, Color color) {
         this.color = color;
         
-        this.casilla = casilla;
+        this.casillaAnt = casilla;
+        this.xAnt = x;
+        this.yAnt = y;
         
+        this.casilla = casilla;
         this.x = x;
         this.y = y;
+        
+        this.posArr = posArr;
         
         setValorBasicos();
     }
@@ -64,22 +77,23 @@ public class Particula {
     
     private void accelerar(){
         // coordenadas en pantalla
-        int x = getXPantalla();
-        int y = getYPantalla();
+        int xPantalla = getXPantalla();
+        int yPantalla = getYPantalla();
         
         double gravedadX = ControladorParticulas.getGravedadX();
         double gravedadY = ControladorParticulas.getGravedadY();
         
-        if(gravedadY != 0){
-            int incrementoY = (int) (Math.abs(gravedadY) / gravedadY);
-            if(ControladorParticulas.particulaIsNull(x, y + (Particula.getSize() * incrementoY)))
-                this.movimientoY += this.aceleracion * gravedadY;
-        }
-        
         if(gravedadX != 0){
-            int incrementoX = (int) (Math.abs(gravedadX) / gravedadX);
-            if(ControladorParticulas.particulaIsNull(x + (Particula.getSize() * incrementoX), y))
+            int signoX = (int) (Math.abs(gravedadX) / gravedadX);
+            int incrementoX = (Particula.getSize() * signoX);
+            if(ControladorParticulas.particulaIsNull(xPantalla + incrementoX, yPantalla))
                 this.movimientoX += this.aceleracion * gravedadX;
+        }
+        if(gravedadY != 0){
+            int signoY = (int) (Math.abs(gravedadY) / gravedadY);
+            int incrementoY = (Particula.getSize() * signoY);
+            if(ControladorParticulas.particulaIsNull(xPantalla, yPantalla + incrementoY))
+                this.movimientoY += this.aceleracion * gravedadY;
         }
     }
     
@@ -90,33 +104,49 @@ public class Particula {
         
         accelerar();
         
+        // El valor de movimiento debe ser minimo 1 para poder moverse
         boolean movX = Math.abs(this.movimientoX) - 1 >= 0;
         boolean movY = Math.abs(this.movimientoY) - 1 >= 0;
+        
         while(movX || movY){
-            int incrementoY = 0;
+            int signoX = 0;
+            int signoY = 0;
             int incrementoX = 0;
+            int incrementoY = 0;
             
+            // Define los incrementos a la coordenada para la siguiente posición
             if(movY){
-                incrementoY = (int) (Math.abs(this.movimientoY) / this.movimientoY);
-                this.movimientoY -= incrementoY;
+                signoY = (int) (Math.abs(this.movimientoY) / this.movimientoY);
+                incrementoY = (Particula.getSize() * signoY);
             }
-            
             if(movX){
-                incrementoX = (int) (Math.abs(this.movimientoX) / this.movimientoX);
-                this.movimientoX -= incrementoX;
+                signoX = (int) (Math.abs(this.movimientoX) / this.movimientoX);
+                incrementoX = (Particula.getSize() * signoX);
             }
             
-            this.casilla.moverParticula(getXPantalla() + (Particula.getSize() * incrementoX), getYPantalla() + (Particula.getSize() * incrementoY), this, false);
+            int xPantalla = getXPantalla();
+            int yPantalla = getYPantalla();
             
+            // Si la particula en dicha posición está libre
+            if(ControladorParticulas.particulaIsNull(xPantalla + incrementoX, yPantalla + incrementoY)){
+                this.casilla.moverParticula(xPantalla + incrementoX, yPantalla + incrementoY, this, false);
+                this.movimientoY -= signoY;
+                this.movimientoX -= signoX;
+            }
+            else
+                break;
             movX = Math.abs(this.movimientoX) - 1 >= 0;
             movY = Math.abs(this.movimientoY) - 1 >= 0;
         }
-        
-        this.actualizada = true;
     }
-
-    public boolean isActualizada() {
-        return actualizada;
+    
+    /**
+     * Define como posición anterior la posicion actual
+     */
+    public void reiniciarPosAnt(){
+        this.xAnt = this.x;
+        this.yAnt = this.y;
+        this.casillaAnt = this.casilla;
     }
     
     public int getX() {
@@ -134,6 +164,18 @@ public class Particula {
     public int getYPantalla() {
         return (y * Particula.getSize()) + this.casilla.getYIni();
     }
+    
+    public int getXAntPantalla() {
+        return (xAnt * Particula.getSize()) + this.casillaAnt.getXIni();
+    }
+
+    public int getYAntPantalla() {
+        return (yAnt * Particula.getSize()) + this.casillaAnt.getYIni();
+    }
+
+    public Casilla getCasillaAnt() {
+        return casillaAnt;
+    }
 
     public Color getColor() {
         return color;
@@ -147,8 +189,13 @@ public class Particula {
         return size;
     }
 
-    public void setActualizada(boolean actualizada) {
-        this.actualizada = actualizada;
+    public int getPosArr() {
+        return posArr;
+    }
+
+    
+    public void setPosArr(int posArr) {
+        this.posArr = posArr;
     }
     
     public void setX(int x) {
@@ -162,7 +209,4 @@ public class Particula {
     public void setCasilla(Casilla casilla) {
         this.casilla = casilla;
     }
-    
-    
-    
 }

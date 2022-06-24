@@ -86,12 +86,21 @@ public class ControladorParticulas implements Runnable{
         generarHilos(this.hilos.size());
     }
     
-    public void pintar(){
+    public void pintar(int alto, int ancho){
         int cantFilas = ControladorParticulas.matrizCasillas.size();
         int cantColum = ControladorParticulas.matrizCasillas.get(0).size();
+        Casilla casilla;
         for (int i = 0; i < cantFilas; i++) {
             for (int j = 0; j < cantColum; j++) {
-                ControladorParticulas.matrizCasillas.get(i).get(j).pintar();
+                casilla = ControladorParticulas.matrizCasillas.get(i).get(j);
+                
+                if(!casilla.isNull())
+                    casilla.pintarBorde();
+                else
+                    casilla.quitarBorde();
+                
+                casilla.pintar();
+                
             }
         }
     }
@@ -105,29 +114,27 @@ public class ControladorParticulas implements Runnable{
             }
         }
         
-        int posFila;
         int posFilaAct; // posición de la fila a actualizar
         int cantHilos = this.hilos.size();
         for (int i = 0; i < 2; i++) {
-            posFila = 0;
             posFilaAct = posHilo*2;
             
-            if(i == 1)
-                posFilaAct++;
+            // si i == 1, posFilaAct será impar
+            posFilaAct += i;
             
             int cantFilas = ControladorParticulas.matrizCasillas.size();
             int cantColum = ControladorParticulas.matrizCasillas.get(0).size();
             Casilla casilla;
             for (int j = 0; j < cantFilas; j++) {
-                if(posFila == posFilaAct){
+                if(j == posFilaAct){
                     for (int k = 0; k < cantColum; k++) {
                         casilla = ControladorParticulas.matrizCasillas.get(j).get(k);
-                        if(!casilla.isNull())
-                            casilla.actualizar(posHilo, cantHilos);
+                        if(!casilla.isNull()){
+                            casilla.actualizar(posHilo);
+                        }
                     }
                     posFilaAct += cantHilos*2;
                 }
-                posFila++;
             }
         }
     }

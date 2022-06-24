@@ -5,14 +5,15 @@
  */
 package clases;
 
+import java.io.IOException;
+
 /**
  *
  * @author Josue Alvarez M
  */
 public class Main{
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException, InterruptedException {
         Pantalla pantalla = new Pantalla();
-        Thread t1 = new Thread(pantalla);
-        t1.start();
+        pantalla.loop();
     }
 }
