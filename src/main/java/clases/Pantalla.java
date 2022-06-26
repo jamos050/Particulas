@@ -16,6 +16,7 @@ import java.io.IOException;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import particulas.Particula;
 
 /**
  *
@@ -98,9 +99,18 @@ public class Pantalla extends JFrame{
     private void raton(){
         this.raton.actualizarPosicion();
         
-        if(this.raton.isPresionando()){
-            this.controladorP.generarParticula(this.raton.getX(), this.raton.getY());
+        int rango = 5 * Particula.getSize();
+        int xMax = this.raton.getX() + rango;
+        int yMax = this.raton.getY() + rango;
+        
+        for (int i = this.raton.getY() - rango; i <= yMax; i++) {
+            for (int j = this.raton.getX() - rango; j <= xMax; j++) {
+                if(this.raton.isPresionando()){
+                    this.controladorP.generarParticula(j, i);
+                }
+            }
         }
+        
     }
     
     public void limpiarGUI(){
@@ -140,7 +150,7 @@ public class Pantalla extends JFrame{
             repaint();
 
             this.controladorP.actualizar();
-            this.controladorP.pintar(this.ventana_alto, this.ventana_ancho);
+            this.controladorP.pintar();
 
             raton();
 

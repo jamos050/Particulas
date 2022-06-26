@@ -12,12 +12,16 @@ import particulas.Particula;
  *
  * @author Josue Alvarez M
  */
-public class ControladorParticulas implements Runnable{
+public class ControladorParticulas{
     private static HashMap<Integer, HashMap<Integer, Casilla>> matrizCasillas;
+    
+    private static Casilla[] casillasArr;
+    private static int casArr_tam; // tamaño del arreglo de casillas
+    private static int posFinArr; // ultima posición disponible del array
     
     public static final GenerarRandom random = GenerarRandom.nuevaEntidad();
     
-    private ArrayList<Thread> hilos;
+    private ArrayList<ControladorParticulasThread> hilos;
     
     private static double gravedadX,gravedadY;
     
@@ -26,6 +30,10 @@ public class ControladorParticulas implements Runnable{
         ControladorParticulas.gravedadY = 1;
         
         generarMatrizCasillas(alto, ancho);
+        
+        ControladorParticulas.posFinArr = 0;
+        ControladorParticulas.casArr_tam = (int) ((matrizCasillas.size() * matrizCasillas.get(0).size())*1.5);
+        ControladorParticulas.casillasArr = new Casilla[ControladorParticulas.casArr_tam];
         
         ControladorParticulas.random.addLista(cantHilos - 1);
         ControladorParticulas.random.setMax(1000);
@@ -61,96 +69,68 @@ public class ControladorParticulas implements Runnable{
     private void generarHilos(int cantHilos){
         this.hilos = new ArrayList<>();
         
-        Thread hilo;
+        ControladorParticulasThread controladorPT;
         for (int i = 0; i < cantHilos; i++) {
-            hilo = new Thread(this);
-            this.hilos.add(hilo);
+            controladorPT = new ControladorParticulasThread(i, cantHilos, this.casillasArr, this.casArr_tam);
+            this.hilos.add(controladorPT);
         }
     }
     
     public void actualizar() throws InterruptedException{
-        for (Thread h : hilos)
-            h.start();
+        for (ControladorParticulasThread controladorPT : hilos)
+            controladorPT.actualizar();
         
-        boolean continuar = false;
-        while(!continuar){
-            continuar = true;
-            for (Thread h : hilos) {
-                if(h.isAlive()){
-                    continuar = false;
-                    break;
-                }
+        boolean finalizado = false; // si ya se actualizó todo
+        while(!finalizado){
+            finalizado = true;
+            for (ControladorParticulasThread h : hilos) {
+                if(!h.isFinalizado())
+                    finalizado = false;
             }
+            
         }
         
-        generarHilos(this.hilos.size());
-    }
-    
-    public void pintar(int alto, int ancho){
-        int cantFilas = ControladorParticulas.matrizCasillas.size();
-        int cantColum = ControladorParticulas.matrizCasillas.get(0).size();
         Casilla casilla;
-        for (int i = 0; i < cantFilas; i++) {
-            for (int j = 0; j < cantColum; j++) {
-                casilla = ControladorParticulas.matrizCasillas.get(i).get(j);
-                
-                if(!casilla.isNull())
-                    casilla.pintarBorde();
-                else
-                    casilla.quitarBorde();
-                
-                casilla.pintar();
-                
-            }
+        for (int i = 0; i < ControladorParticulas.casArr_tam; i++) {
+            casilla = ControladorParticulas.casillasArr[i];
+            if(casilla == null)
+                break;
+            
+            if(casilla.isNull() || !casilla.isActiva())
+                quitarCasillaArray(i);
         }
     }
     
-    private void actualizarParticula(){
-        int posHilo = 0;
-        for (int i = 0; i < this.hilos.size(); i++) {
-            if(this.hilos.get(i).getId() == Thread.currentThread().getId()){
-                posHilo = i;
-                break;
-            }
-        }
-        
-        int posFilaAct; // posición de la fila a actualizar
-        int cantHilos = this.hilos.size();
-        for (int i = 0; i < 2; i++) {
-            posFilaAct = posHilo*2;
+    public void pintar(){
+        for (int i = 0; i < ControladorParticulas.posFinArr; i++) {
+            Casilla casilla = ControladorParticulas.casillasArr[i];
             
-            // si i == 1, posFilaAct será impar
-            posFilaAct += i;
-            
-            int cantFilas = ControladorParticulas.matrizCasillas.size();
-            int cantColum = ControladorParticulas.matrizCasillas.get(0).size();
-            Casilla casilla;
-            for (int j = 0; j < cantFilas; j++) {
-                if(j == posFilaAct){
-                    for (int k = 0; k < cantColum; k++) {
-                        casilla = ControladorParticulas.matrizCasillas.get(j).get(k);
-                        if(!casilla.isNull()){
-                            casilla.actualizar(posHilo);
-                        }
-                    }
-                    posFilaAct += cantHilos*2;
-                }
-            }
+            casilla.pintar();
+            //casilla.quitarBorde();
         }
+    }
+    
+    private void quitarCasillaArray(int pos){
+        ControladorParticulas.casillasArr[pos].setEnArrayCasillas(false);
+        ControladorParticulas.casillasArr[pos] = ControladorParticulas.casillasArr[ControladorParticulas.posFinArr - 1];
+        ControladorParticulas.casillasArr[ControladorParticulas.posFinArr - 1] = null;
+        ControladorParticulas.posFinArr--;
     }
     
     public void generarParticula(int x, int y){
         if(x >= 0 && y >= 0){
             Casilla casilla = getCasillaRango(x, y);
             
-            x -= casilla.getXIni();
-            y -= casilla.getYIni();
-            
-            casilla.generarParticula(x, y);
+            if(casilla != null){
+                x -= casilla.getXIni();
+                y -= casilla.getYIni();
+
+                casilla.generarParticula(x, y);
+            }
         }
     }
     
-    public static boolean particulaIsNull(int x, int y){
+    public synchronized static boolean particulaIsNull(int x, int y){
         if(x >= 0 && y >= 0){
             Casilla casilla = getCasillaRango(x, y);
             
@@ -165,6 +145,41 @@ public class ControladorParticulas implements Runnable{
         
         return false;
     }
+    
+    /**
+     * Marca como activa y agrega a casillasArray la casilla
+     * indicada y sus cercanas
+     * @param casilla 
+     */
+    public static void activar(Casilla casilla){
+        casilla.setActiva(true);
+        
+        int x;
+        int y = casilla.getPosY() - 1;
+        
+        for (int i = 0; i < 3; i++) {
+            x = casilla.getPosX() - 1;
+            for (int j = 0; j < 3; j++) {
+                if(ControladorParticulas.matrizCasillas.containsKey(y) && ControladorParticulas.matrizCasillas.get(y).containsKey(x)){
+                    Casilla casillaCercana = ControladorParticulas.matrizCasillas.get(y).get(x);
+                    if(!casillaCercana.isEnArrayCasillas()){
+                        casillaCercana.setActiva(true);
+                        agregarCasillaArray(casillaCercana);
+                    }
+                }
+                x++;
+            }
+            y++;
+        }
+        
+    }
+    
+    public synchronized static void agregarCasillaArray(Casilla casilla){
+        casilla.setEnArrayCasillas(true);
+        ControladorParticulas.casillasArr[ControladorParticulas.posFinArr] = casilla;
+        ControladorParticulas.posFinArr++;
+    }
+    
     
     /**
      * Busca la casilla que contenga en su rango la coordenada indicada.
@@ -198,7 +213,27 @@ public class ControladorParticulas implements Runnable{
         
         return casilla;
     }
-
+    
+    public static Casilla getCasillaRelativa(int x, int y, Casilla casilla){
+        int posX = casilla.getPosX();
+        int posY = casilla.getPosY();
+        
+        double incX = (double)x / (double)Casilla.size;
+        double incY = (double)y / (double)Casilla.size;
+        
+        if(incX < 0)
+            incX--;
+        if(incY < 0)
+            incY--;
+        
+        if(ControladorParticulas.matrizCasillas.containsKey(posY + (int)incY) 
+        && ControladorParticulas.matrizCasillas.get(posY + (int)incY).containsKey(posX + (int)incX)){
+            return ControladorParticulas.matrizCasillas.get(posY + (int)incY).get(posX + (int)incX);
+        }
+        
+        return null;
+    }
+    
     public static double getGravedadX() {
         return gravedadX;
     }
@@ -206,11 +241,4 @@ public class ControladorParticulas implements Runnable{
     public static double getGravedadY() {
         return gravedadY;
     }
-    
-    @Override
-    public void run() {
-        actualizarParticula();
-    }
-    
-    
 }
