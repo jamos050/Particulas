@@ -12,7 +12,7 @@ import particulas.Particula;
  * @author Josue Alvarez M
  */
 public class Casilla {
-    public static final int size = 16;
+    public static final int size = 4;
     
     private volatile Particula[][] matriz; 
     
@@ -71,7 +71,7 @@ public class Casilla {
             // si se actualizó mínimo una particula
             if(particula.actualizar(hilo))
                 this.activa = true;
-                
+            
         }
     }
     
@@ -135,7 +135,8 @@ public class Casilla {
         x /= particulaTam;
         y /= particulaTam;
         
-        setParticula(x, y, new Particula(this, x, y, this.posFinArr));
+        if(isParticulaNull(x, y))
+            setParticula(x, y, new Particula(this, x, y, this.posFinArr));
     }
     
     public synchronized void borrarParticula(int x, int y){
@@ -161,6 +162,7 @@ public class Casilla {
      * @param particula
      * Particula a mover
      * @param remplazar 
+     * @return  
      */
     public synchronized boolean moverParticula(int x, int y, Particula particula, boolean remplazar){
         Casilla casilla = ControladorParticulas.getCasillaRelativa(x, y, this);

@@ -99,7 +99,7 @@ public class Pantalla extends JFrame{
     private void raton(){
         this.raton.actualizarPosicion();
         
-        int rango = 5 * Particula.getSize();
+        int rango = 0 * Particula.getSize();
         int xMax = this.raton.getX() + rango;
         int yMax = this.raton.getY() + rango;
         

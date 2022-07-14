@@ -23,7 +23,7 @@ public class ControladorParticulas{
     
     private ArrayList<ControladorParticulasThread> hilos;
     
-    private static double gravedadX,gravedadY;
+    private static double gravedadX, gravedadY;
     
     public ControladorParticulas(int alto, int ancho, int cantHilos) {
         ControladorParticulas.gravedadX = 0;
@@ -162,7 +162,7 @@ public class ControladorParticulas{
             for (int j = 0; j < 3; j++) {
                 if(ControladorParticulas.matrizCasillas.containsKey(y) && ControladorParticulas.matrizCasillas.get(y).containsKey(x)){
                     Casilla casillaCercana = ControladorParticulas.matrizCasillas.get(y).get(x);
-                    if(!casillaCercana.isEnArrayCasillas()){
+                    if(!casillaCercana.isEnArrayCasillas() && !casillaCercana.isNull()){
                         casillaCercana.setActiva(true);
                         agregarCasillaArray(casillaCercana);
                     }
@@ -214,6 +214,14 @@ public class ControladorParticulas{
         return casilla;
     }
     
+    /**
+     * Busca y retorna la casilla donde se encuentra la particula
+     * indicada por X y Y matrizCasilla relativa a la casilla indicada.
+     * @param x
+     * @param y
+     * @param casilla
+     * @return 
+     */
     public static Casilla getCasillaRelativa(int x, int y, Casilla casilla){
         int posX = casilla.getPosX();
         int posY = casilla.getPosY();
@@ -233,7 +241,7 @@ public class ControladorParticulas{
         
         return null;
     }
-    
+
     public static double getGravedadX() {
         return gravedadX;
     }

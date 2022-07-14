@@ -31,7 +31,7 @@ public class ControladorParticulasThread implements Runnable{
         iniciarThread();
     }
 
-    private synchronized void actualizarParticula(){
+    private void actualizarParticula(){
         Casilla casilla;
         for (int i = this.id; i < this.casArr_tam; i += this.cantidad) {
             casilla = this.casillasArray[i];
@@ -48,12 +48,12 @@ public class ControladorParticulasThread implements Runnable{
         t.start();
     }
     
-    public synchronized void actualizar(){
-        this.actualizar = true;
+    public void actualizar(){
         this.finalizado = false;
+        this.actualizar = true;
     }
     
-    public synchronized boolean isFinalizado() {
+    public boolean isFinalizado() {
         return finalizado;
     }
 
