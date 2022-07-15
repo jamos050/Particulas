@@ -6,7 +6,9 @@
 package particulas;
 
 import clases.Casilla;
+import clases.ControladorFrames;
 import clases.ControladorParticulas;
+import clases.Juego;
 import java.awt.Color;
 
 
@@ -30,7 +32,7 @@ public class Particula {
     private double porc_rebote;
     private double porc_inercia;
     
-    private double aceleracionMax;
+    private double aceleracionBase;
     private double aceleracionX;
     private double aceleracionY;
     
@@ -71,10 +73,10 @@ public class Particula {
     }
     
     private void setValorBasicos(){
-        this.porc_rebote = 0.30;
-        this.porc_inercia = 0.1;
+        this.porc_rebote = 0.40;
+        this.porc_inercia = 0.60;
         
-        this.aceleracionMax = 1;
+        this.aceleracionBase = 175;
         this.aceleracionX = 0;
         this.aceleracionY = 0;
         
@@ -82,57 +84,39 @@ public class Particula {
         this.movimientoY = 0;
     }
     
-    private void validarAceleracionMax(){
-        if(this.aceleracionX > this.aceleracionMax)
-            this.aceleracionX = this.aceleracionMax;
-        if(this.aceleracionY > this.aceleracionMax)
-            this.aceleracionY = this.aceleracionMax;
-    }
     
     private boolean acelerar(){
         double gravedadX = ControladorParticulas.getGravedadX();
         double gravedadY = ControladorParticulas.getGravedadY();
         
-        double incrementoX = 0;
-        double incrementoY = 0;
-        if(gravedadX != 0)
-            incrementoX = 1 / (Math.abs(gravedadX) * 2000);
-        if(gravedadY != 0)
-            incrementoY = 1 / (Math.abs(gravedadY) * 2000);
+        int frames = ControladorFrames.getFrames();
         
-        if(Math.abs(this.aceleracionX) < incrementoX)
-            this.aceleracionX = 0;
-        
-        if(Math.abs(this.aceleracionY) < incrementoY)
-            this.aceleracionY = 0;
+        // gravedad con valores negativos no está funcionando
         
         // Acelera si no hay colisión
         if(!colision()){
-            if(gravedadX > 0 && this.aceleracionX < gravedadX){
-                this.aceleracionX += incrementoX;
-                if(this.aceleracionX > gravedadX)
-                    this.aceleracionX = gravedadX;
-            }
-            else if(gravedadX < 0 && this.aceleracionX > gravedadX){
-                this.aceleracionX -= incrementoX;
-                if(this.aceleracionX < gravedadX)
-                    this.aceleracionX = gravedadX;
-            }
-            if(gravedadY > 0 && this.aceleracionY < gravedadY){
-                this.aceleracionY += incrementoY;
-                if(this.aceleracionY > gravedadY)
-                    this.aceleracionY = gravedadY;
-            }
-            else if(gravedadY < 0 && this.aceleracionY > gravedadY){
-                this.aceleracionY -= incrementoY;
-                if(this.aceleracionY < gravedadY)
-                    this.aceleracionY = gravedadY;
-            }
+            if(gravedadX < 0 && this.aceleracionX > this.aceleracionBase * gravedadX)
+                this.aceleracionX -= (200D / frames);
+            else if(gravedadX > 0 && this.aceleracionX < this.aceleracionBase * gravedadX)
+                this.aceleracionX += (200D / frames);
+            if(gravedadY < 0 && this.aceleracionY > this.aceleracionBase * gravedadY)
+                this.aceleracionY -= (200D / frames);
+            else if(gravedadY > 0 && this.aceleracionY < this.aceleracionBase * gravedadY)
+                this.aceleracionY += (200D / frames);
             
-            validarAceleracionMax();
+            double incrementoX;
+            double incrementoY;
             
-            this.movimientoX += this.aceleracionX;
-            this.movimientoY += this.aceleracionY;
+            incrementoX = this.aceleracionX / frames;
+            incrementoY = this.aceleracionY / frames;
+            
+            if(Math.abs(this.aceleracionX) < incrementoX)
+                this.aceleracionX = 0;
+            if(Math.abs(this.aceleracionY) < incrementoY)
+                this.aceleracionY = 0;
+            
+            this.movimientoX += incrementoX;
+            this.movimientoY += incrementoY;
             
             return true;
         }
@@ -178,12 +162,12 @@ public class Particula {
             if(incrementoX == 0){ // si no se estaba moviendo en x
                 this.aceleracionY *= -1;
 
-                this.aceleracionX += this.aceleracionY * ControladorParticulas.random.getNum(hilo, 2, -2) * (ControladorParticulas.random.getNum(hilo, 20)/100);
+                this.aceleracionX += this.aceleracionY * Juego.random.getNum(hilo, 2, -2) * (Juego.random.getNum(hilo, 15)/100);
             }
             else if(incrementoY == 0){ // si no se estaba moviendo en y
                 this.aceleracionX *= -1;
 
-                this.aceleracionY += this.aceleracionX * ControladorParticulas.random.getNum(hilo, 2, -2) * (ControladorParticulas.random.getNum(hilo, 20)/100);
+                this.aceleracionY += this.aceleracionX * Juego.random.getNum(hilo, 2, -2) * (Juego.random.getNum(hilo, 15)/100);
             }
             
             else{
@@ -193,7 +177,7 @@ public class Particula {
                     if(this.casilla.isParticulaNull(this.x, this.y + incrementoY)
                         && ControladorParticulas.getCasillaRelativa(this.x, this.y + incrementoY, this.casilla) != null){
                         
-                        int rand = (int) ControladorParticulas.random.getNum(hilo, 100);
+                        int rand = (int) Juego.random.getNum(hilo, 100);
                         if(rand  < 66){
                             if(rand < 33)
                                 this.aceleracionX *= -1;
@@ -224,17 +208,14 @@ public class Particula {
             if(incrementoX != 0){
                 this.aceleracionX *= this.porc_rebote;
             }
-            if(Math.abs(this.aceleracionX) < 0.0001)
+            if(Math.abs(this.aceleracionX) < 1)
                 this.aceleracionX = 0;
             
             if(incrementoY != 0){
                 this.aceleracionY *= this.porc_rebote;
             }
-            if(Math.abs(this.aceleracionY) < 0.0001)
+            if(Math.abs(this.aceleracionY) < 1)
                 this.aceleracionY = 0;
-            
-            
-            validarAceleracionMax();
             
             this.movimientoX = 0;
             this.movimientoY = 0;
@@ -246,9 +227,9 @@ public class Particula {
     }
     
     public boolean actualizar(int hilo){
-        this.color = new Color((int) ControladorParticulas.random.getNum(hilo, 256)
-                                , (int) ControladorParticulas.random.getNum(hilo, 256)
-                                , (int) ControladorParticulas.random.getNum(hilo, 256));
+        this.color = new Color((int) Juego.random.getNum(hilo, 256)
+                                , (int) Juego.random.getNum(hilo, 256)
+                                , (int) Juego.random.getNum(hilo, 256));
         
         boolean acel = acelerar();
         

@@ -13,6 +13,7 @@ import java.awt.Graphics2D;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.ArrayList;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -34,13 +35,9 @@ public class Pantalla extends JFrame{
     private int ventana_ancho;
     private int ventana_alto;
     
-    private final ControladorParticulas controladorP;
     private final Raton raton;
-    
-    public Pantalla(){
+    public Pantalla() throws IOException{
         iniciarVentana();
-        
-        this.controladorP = new ControladorParticulas(this.ventana_alto, this.ventana_ancho, 1);
         
         this.raton = new Raton();
         addMouseListener(this.raton);
@@ -48,6 +45,8 @@ public class Pantalla extends JFrame{
         
         iniciarPantalla();
         iniciarImagen();
+        
+        definirImagenBuffer();
     }
     
     private void iniciarVentana(){
@@ -96,21 +95,24 @@ public class Pantalla extends JFrame{
     }
     
     
-    private void raton(){
+    public ArrayList<int[]> raton(){
+        ArrayList<int[]> posiciones = new ArrayList<>();
+        
         this.raton.actualizarPosicion();
         
-        int rango = 0 * Particula.getSize();
+        int rango = 1 * Particula.getSize();
         int xMax = this.raton.getX() + rango;
         int yMax = this.raton.getY() + rango;
         
         for (int i = this.raton.getY() - rango; i <= yMax; i++) {
             for (int j = this.raton.getX() - rango; j <= xMax; j++) {
                 if(this.raton.isPresionando()){
-                    this.controladorP.generarParticula(j, i);
+                    posiciones.add(new int[]{j, i});
                 }
             }
         }
         
+        return posiciones;
     }
     
     public void limpiarGUI(){
@@ -139,24 +141,13 @@ public class Pantalla extends JFrame{
             //Pantalla.g2dGUI.drawOval(this.raton.getX() - r/2, this.raton.getY() - 23 - r/2, r, r);
             
         }catch(Exception e){
-            
+            System.out.println(e);
         }
     } 
 
-    public void loop() throws IOException, InterruptedException {
-        definirImagenBuffer();
-        
-        while(true){
-            repaint();
-
-            this.controladorP.actualizar();
-            this.controladorP.pintar();
-
-            raton();
-
-        }
-        
-        
+    public void pintar(ControladorParticulas controladorP) throws IOException, InterruptedException {
+        repaint();
+        controladorP.pintar();
     }
 
     public static Graphics2D getG2d() {

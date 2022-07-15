@@ -12,7 +12,7 @@ import particulas.Particula;
  * @author Josue Alvarez M
  */
 public class Casilla {
-    public static final int size = 4;
+    public static final int size = 2;
     
     private volatile Particula[][] matriz; 
     
@@ -58,7 +58,7 @@ public class Casilla {
         Particula particula;
         this.activa = false;
         for (int i = this.posFinArr; i > 0; i--) {
-            pos = (int) ControladorParticulas.random.getNum(hilo, i);
+            pos = (int) Juego.random.getNum(hilo, i);
             
             particula = this.particulasArr[pos];
             

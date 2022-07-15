@@ -19,24 +19,19 @@ public class ControladorParticulas{
     private static int casArr_tam; // tamaño del arreglo de casillas
     private static int posFinArr; // ultima posición disponible del array
     
-    public static final GenerarRandom random = GenerarRandom.nuevaEntidad();
-    
     private ArrayList<ControladorParticulasThread> hilos;
     
     private static double gravedadX, gravedadY;
     
     public ControladorParticulas(int alto, int ancho, int cantHilos) {
         ControladorParticulas.gravedadX = 0;
-        ControladorParticulas.gravedadY = 1;
+        ControladorParticulas.gravedadY = -1;
         
         generarMatrizCasillas(alto, ancho);
         
         ControladorParticulas.posFinArr = 0;
         ControladorParticulas.casArr_tam = (int) ((matrizCasillas.size() * matrizCasillas.get(0).size())*1.5);
         ControladorParticulas.casillasArr = new Casilla[ControladorParticulas.casArr_tam];
-        
-        ControladorParticulas.random.addLista(cantHilos - 1);
-        ControladorParticulas.random.setMax(1000);
         
         generarHilos(cantHilos);
     }
@@ -90,6 +85,7 @@ public class ControladorParticulas{
             
         }
         
+        // Recorre el array casillas y remueve las vacias o no activas
         Casilla casilla;
         for (int i = 0; i < ControladorParticulas.casArr_tam; i++) {
             casilla = ControladorParticulas.casillasArr[i];
