@@ -12,16 +12,16 @@ import particulas.Particula;
  * @author Josue Alvarez M
  */
 public class Casilla {
-    public static final int size = 2;
+    public static final int SIZE = 32;
     
     private volatile Particula[][] matriz; 
     
-    private final Particula[] particulasArr;
-    private final int partArr_tam; // tamaño del arreglo de partículas
-    private int posFinArr; // ultima posición disponible del array
+    private final Particula[][] matrizOrdFila;
+    private final int[] info_matrizOrdFila;
+    private final Particula[][] matrizOrdColumna;
+    private final int[] info_matrizOrdColumna;
     
     private volatile boolean enArrayCasillas; // indica si la casilla se encuentra en el array de casillas
-    private volatile boolean activa; // indica si la casilla está activa (si hay partículas que actualizar)
     
     // posición en la que se ubica en pantalla
     private int xIni;
@@ -43,36 +43,176 @@ public class Casilla {
         this.posX = posX;
         this.posY = posY;
         
-        this.matriz = new Particula[Casilla.size][Casilla.size];
+        this.matriz = new Particula[Casilla.SIZE][Casilla.SIZE];
         
-        this.partArr_tam = Casilla.size * Casilla.size;
-        this.particulasArr = new Particula[this.partArr_tam];
-        this.posFinArr = 0;
+        this.matrizOrdFila = new Particula[Casilla.SIZE][Casilla.SIZE];
+        this.info_matrizOrdFila = new int[Casilla.SIZE];
+        this.matrizOrdColumna = new Particula[Casilla.SIZE][Casilla.SIZE];
+        this.info_matrizOrdColumna = new int[Casilla.SIZE];
         
         this.enArrayCasillas = false;
     }
     
     public synchronized void actualizar(int hilo){
-        int pos;
+        double gravedadY = ControladorParticulas.getGravedadY();
+        double gravedadX = ControladorParticulas.getGravedadX();
         
+        int pos;
         Particula particula;
-        this.activa = false;
-        for (int i = this.posFinArr; i > 0; i--) {
-            pos = (int) Juego.random.getNum(hilo, i);
-            
-            particula = this.particulasArr[pos];
-            
-            // Pasa la partícula al final del array
-            particula.setPosArr(i - 1);
-            this.particulasArr[i - 1].setPosArr(pos);
-            this.particulasArr[pos] = this.particulasArr[i - 1];
-            this.particulasArr[i - 1] = particula;
-            
-            // si se actualizó mínimo una particula
-            if(particula.actualizar(hilo))
-                this.activa = true;
-            
+        if(Math.abs(gravedadY) > Math.abs(gravedadX)){
+            if(gravedadY > 0){
+                for (int i = Casilla.SIZE-1; i >= 0; i--) {
+                    if(this.info_matrizOrdFila[i] == 0)
+                        continue;
+
+                    for (int tam = this.info_matrizOrdFila[i]; tam > 0; tam--) {
+                        pos = (int) Juego.random.getNum(hilo, tam);
+
+                        particula = this.matrizOrdFila[i][pos];
+
+                        // Pasa la partícula al final
+                        particula.setPosMatrizOrdFila(tam - 1);
+                        this.matrizOrdFila[i][tam - 1].setPosMatrizOrdFila(pos);
+                        this.matrizOrdFila[i][pos] = this.matrizOrdFila[i][tam - 1];
+                        this.matrizOrdFila[i][tam - 1] = particula;
+
+                        if(!particula.isActualizada()){
+                            particula.actualizar(hilo);
+                            particula.setActualizada(true);
+                        }
+                        if(!particula.isActiva())
+                            quitarParticulaMatrizOrd(particula);
+                    }
+                }
+            }
+            else{
+                for (int i = 0; i < Casilla.SIZE; i++) {
+                    if(this.info_matrizOrdFila[i] == 0)
+                        continue;
+
+                    for (int tam = this.info_matrizOrdFila[i]; tam > 0; tam--) {
+                        pos = (int) Juego.random.getNum(hilo, tam);
+
+                        particula = this.matrizOrdFila[i][pos];
+
+                        // Pasa la partícula al final
+                        particula.setPosMatrizOrdFila(tam - 1);
+                        this.matrizOrdFila[i][tam - 1].setPosMatrizOrdFila(pos);
+                        this.matrizOrdFila[i][pos] = this.matrizOrdFila[i][tam - 1];
+                        this.matrizOrdFila[i][tam - 1] = particula;
+
+                        if(!particula.isActualizada()){
+                            particula.actualizar(hilo);
+                            particula.setActualizada(true);
+                        }
+                        if(!particula.isActiva())
+                            quitarParticulaMatrizOrd(particula);
+                    }
+                }
+            }
         }
+        else{
+            if(gravedadX > 0){
+                for (int i = Casilla.SIZE-1; i >= 0; i--) {
+                    if(this.info_matrizOrdColumna[i] == 0)
+                        continue;
+
+                    for (int tam = this.info_matrizOrdColumna[i]; tam > 0; tam--) {
+                        pos = (int) Juego.random.getNum(hilo, tam);
+
+                        particula = this.matrizOrdColumna[i][pos];
+
+                        // Pasa la partícula al final
+                        particula.setPosMatrizOrdColumna(tam - 1);
+                        this.matrizOrdColumna[i][tam - 1].setPosMatrizOrdColumna(pos);
+                        this.matrizOrdColumna[i][pos] = this.matrizOrdColumna[i][tam - 1];
+                        this.matrizOrdColumna[i][tam - 1] = particula;
+                        
+                        if(!particula.isActualizada()){
+                            particula.actualizar(hilo);
+                            particula.setActualizada(true);
+                        }
+                        if(!particula.isActiva())
+                            quitarParticulaMatrizOrd(particula);
+                    }
+                }
+            }
+            else{
+                for (int i = 0; i < Casilla.SIZE; i++) {
+                    if(this.info_matrizOrdColumna[i] == 0)
+                        continue;
+
+                    for (int tam = this.info_matrizOrdColumna[i]; tam > 0; tam--) {
+                        pos = (int) Juego.random.getNum(hilo, tam);
+
+                        particula = this.matrizOrdColumna[i][pos];
+
+                        // Pasa la partícula al final
+                        particula.setPosMatrizOrdColumna(tam - 1);
+                        this.matrizOrdColumna[i][tam - 1].setPosMatrizOrdColumna(pos);
+                        this.matrizOrdColumna[i][pos] = this.matrizOrdColumna[i][tam - 1];
+                        this.matrizOrdColumna[i][tam - 1] = particula;
+
+                        if(!particula.isActualizada()){
+                            particula.actualizar(hilo);
+                            particula.setActualizada(true);
+                        }
+                        if(!particula.isActiva())
+                            quitarParticulaMatrizOrd(particula);
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * Agrega a las matrizOrdFila y matrizOrdColumna de su correspondiente casilla la
+     * partícula indicada y sus cercanas. 
+     * @param particula
+     */
+    public synchronized void activar(Particula particula){
+        int rango = 2;
+        
+        for (int i = -rango; i <= rango; i++) {
+            for (int j = -rango; j <= rango; j++) {
+                Particula particulaCercana = getParticula(particula.getX() + j, particula.getY() + i);
+                
+                if(particulaCercana != null && !particulaCercana.isActiva()){
+                    particulaCercana.setActiva(true);
+                    particulaCercana.getCasilla().agregarParticulaMatrizOrd(particulaCercana);
+                }
+            }
+        }
+    }
+    
+    public synchronized void agregarParticulaMatrizOrd(Particula particula){
+        // matrizOrdFila
+        int posMatrizOrdFila = this.info_matrizOrdFila[particula.getY()];
+        particula.setPosMatrizOrdFila(posMatrizOrdFila);
+        this.matrizOrdFila[particula.getY()][posMatrizOrdFila] = particula;
+        this.info_matrizOrdFila[particula.getY()]++;
+        
+        // matrizOrdColumna
+        int posMatrizOrdColumna = this.info_matrizOrdColumna[particula.getX()];
+        particula.setPosMatrizOrdColumna(posMatrizOrdColumna);
+        this.matrizOrdColumna[particula.getX()][posMatrizOrdColumna] = particula;
+        this.info_matrizOrdColumna[particula.getX()]++;
+    }
+    
+    public synchronized void quitarParticulaMatrizOrd(Particula particula){
+        particula.setActiva(false);
+        this.matrizOrdFila[particula.getY()][this.info_matrizOrdFila[particula.getY()] - 1].setPosMatrizOrdFila(particula.getPosMatrizOrdFila());
+        this.matrizOrdColumna[particula.getX()][this.info_matrizOrdColumna[particula.getX()] - 1].setPosMatrizOrdColumna(particula.getPosMatrizOrdColumna());
+        
+        // matrizOrdFila
+        this.matrizOrdFila[particula.getY()][particula.getPosMatrizOrdFila()] = this.matrizOrdFila[particula.getY()][this.info_matrizOrdFila[particula.getY()] - 1];
+        this.matrizOrdFila[particula.getY()][this.info_matrizOrdFila[particula.getY()] - 1] = null;
+        this.info_matrizOrdFila[particula.getY()]--;
+        
+        // matrizOrdColumna
+        this.matrizOrdColumna[particula.getX()][particula.getPosMatrizOrdColumna()] = this.matrizOrdColumna[particula.getX()][this.info_matrizOrdColumna[particula.getX()] - 1];
+        this.matrizOrdColumna[particula.getX()][this.info_matrizOrdColumna[particula.getX()] - 1] = null;
+        this.info_matrizOrdColumna[particula.getX()]--;
     }
     
     public void pintar() {
@@ -84,46 +224,61 @@ public class Casilla {
         Casilla casilla;
         
         // Borra la posición anterior de la partícula
-        for (Particula particula : particulasArr){
-            if(particula == null)
+        Particula particula;
+        int tam;
+        for (int i = 0; i < Casilla.SIZE; i++) {
+            tam = this.info_matrizOrdFila[i];
+            if(tam == 0)
                 continue;
             
-            xAnt = particula.getXAntPantalla();
-            yAnt = particula.getYAntPantalla();
-            casillaAnt = particula.getCasillaAnt();
-            
-            x = particula.getXPantalla();
-            y = particula.getYPantalla();
-            casilla = particula.getCasilla();
-            
-            if(xAnt != x || yAnt != y || casillaAnt != casilla)
-                Pantalla.getG2d().clearRect(xAnt, yAnt, Particula.getSize(), Particula.getSize());
+            for (int j = 0; j < tam; j++) {
+                particula = this.matrizOrdFila[i][j];
+                
+                xAnt = particula.getXAntPantalla();
+                yAnt = particula.getYAntPantalla();
+                casillaAnt = particula.getCasillaAnt();
+
+                x = particula.getXPantalla();
+                y = particula.getYPantalla();
+                casilla = particula.getCasilla();
+                
+                if((xAnt != x || yAnt != y || casillaAnt != casilla) 
+                    && casillaAnt.isParticulaNull(particula.getXAnt(), particula.getYAnt())){
+                    
+                    Pantalla.getG2d().clearRect(xAnt, yAnt, Particula.getSize(), Particula.getSize());
+                }
+            }
         }
         
         // pinta la posición actual de la partícula
-        for (Particula particula : particulasArr){
-            if(particula == null)
+        for (int i = 0; i < Casilla.SIZE; i++) {
+            tam = this.info_matrizOrdFila[i];
+            if(tam == 0)
                 continue;
             
-            x = particula.getXPantalla();
-            y = particula.getYPantalla();
-            
-            Pantalla.getG2d().setColor(particula.getColor());
-            Pantalla.getG2d().fillRect(x, y, Particula.getSize(), Particula.getSize());
-            
-            // actualizar posición anterior
-            particula.reiniciarPosAnt();
+            for (int j = 0; j < tam; j++) {
+                particula = this.matrizOrdFila[i][j];
+                
+                x = particula.getXPantalla();
+                y = particula.getYPantalla();
+
+                Pantalla.getG2d().setColor(particula.getColor());
+                Pantalla.getG2d().fillRect(x, y, Particula.getSize(), Particula.getSize());
+
+                // actualizar posición anterior
+                particula.reiniciarPosAnt();
+            }
         }
     }
     
     public void pintarBorde() {
-        int dim = Particula.getSize() * Casilla.size;
+        int dim = Particula.getSize() * Casilla.SIZE;
         
         Pantalla.getG2d().setColor(Color.BLACK);
         Pantalla.getG2d().drawRect(this.xIni + 1, this.yIni + 1, dim - 1, dim - 1);
     }
     public void quitarBorde() {
-        int dim = Particula.getSize() * Casilla.size;
+        int dim = Particula.getSize() * Casilla.SIZE;
         
         Pantalla.getG2d().setColor(Pantalla.getG2d().getBackground());
         Pantalla.getG2d().drawRect(this.xIni + 1, this.yIni + 1, dim - 1, dim - 1);
@@ -136,7 +291,7 @@ public class Casilla {
         y /= particulaTam;
         
         if(isParticulaNull(x, y))
-            setParticula(x, y, new Particula(this, x, y, this.posFinArr));
+            setParticula(x, y, new Particula(this, x, y, this.info_matrizOrdFila[y], this.info_matrizOrdColumna[x]));
     }
     
     public synchronized void borrarParticula(int x, int y){
@@ -144,14 +299,8 @@ public class Casilla {
         if(particula != null){
             this.matriz[y][x] = null;
             
-            int pos = particula.getPosArr();
-            // pasa la ultima partícula a la posición de la partícula eliminada
-            this.particulasArr[this.posFinArr - 1].setPosArr(pos);
-            this.particulasArr[pos] = this.particulasArr[this.posFinArr - 1];
-            // borra la ultima partícula
-            this.particulasArr[this.posFinArr - 1] = null;
-            
-            this.posFinArr--;
+            if(particula.isActiva())
+                quitarParticulaMatrizOrd(particula);
         }
     }
     
@@ -186,37 +335,23 @@ public class Casilla {
     }
     
     public synchronized void setParticula(int x, int y, Particula particula){
-        if(x < Casilla.size && y < Casilla.size){
+        if(x < Casilla.SIZE && y < Casilla.SIZE){
             if(!this.enArrayCasillas)
                 ControladorParticulas.agregarCasillaArray(this);
             
             borrarParticula(x, y);
             
-            ControladorParticulas.activar(this);
-            
+            this.matriz[y][x] = particula;
             particula.setCasilla(this);
             particula.setX(x);
             particula.setY(y);
-            particula.setPosArr(this.posFinArr);
             
-            this.particulasArr[this.posFinArr] = particula;
-            this.matriz[y][x] = particula;
-            
-            this.posFinArr++;
+            activar(particula);
         }
     }
     
-    public void setEnArrayCasillas(boolean enArrayCasillas) {
+    public synchronized void setEnArrayCasillas(boolean enArrayCasillas) {
         this.enArrayCasillas = enArrayCasillas;
-    }
-
-    public void setActiva(boolean activa) {
-        this.activa = activa;
-    }
-
-    
-    public boolean isActiva() {
-        return activa;
     }
 
     public boolean isEnArrayCasillas() {
@@ -228,8 +363,13 @@ public class Casilla {
      * contenidas en la casilla es 0.
      * @return 
      */
-    public boolean isNull(){
-        return this.posFinArr == 0;
+    public synchronized boolean isNull(){
+        for (int i = 0; i < Casilla.SIZE; i++) {
+            if(this.info_matrizOrdFila[i] != 0)
+                return false;
+        }
+        
+        return true;
     }
     
     /**
@@ -239,7 +379,7 @@ public class Casilla {
      * @param y
      * @return 
      */
-    public boolean isParticulaNull(int x, int y){
+    public synchronized boolean isParticulaNull(int x, int y){
         return getParticula(x, y) == null;
     }
     
@@ -249,8 +389,8 @@ public class Casilla {
      * @param y
      * @return 
      */
-    public Particula getParticula(int x, int y){
-        if(x >= 0 && y >= 0 && x < Casilla.size && y < Casilla.size)
+    public synchronized Particula getParticula(int x, int y){
+        if(x >= 0 && y >= 0 && x < Casilla.SIZE && y < Casilla.SIZE)
             return this.matriz[y][x];
         
         Casilla casilla = ControladorParticulas.getCasillaRelativa(x, y, this);
@@ -288,5 +428,19 @@ public class Casilla {
         return posY;
     }
     
-    
+    public synchronized void setActualizadaFalse(){
+        int tam;
+        Particula particula;
+        for (int i = 0; i < Casilla.SIZE; i++) {
+            tam = this.info_matrizOrdFila[i];
+            if(tam == 0)
+                continue;
+            
+            for (int j = 0; j < tam; j++) {
+                particula = this.matrizOrdFila[i][j];
+                
+                particula.setActualizada(false);
+            }
+        }
+    }
 }

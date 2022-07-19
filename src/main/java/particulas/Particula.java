@@ -19,7 +19,11 @@ import java.awt.Color;
 public class Particula {
     private static int size = 3;
     
-    private int posArr;
+    private boolean actualizada = false;
+    
+    private boolean activa = false;
+    private int posMatrizOrdFila;
+    private int posMatrizOrdColumna;
     
     private int xAnt, yAnt;     // Posición anterior mostrada en pantalla, en la matriz casilla
     private Casilla casillaAnt;    // Casilla en la que estaba la partícula
@@ -39,7 +43,7 @@ public class Particula {
     private double movimientoX, movimientoY;
     public static final Color COLOR_PRED = Color.BLACK;
 
-    public Particula(Casilla casilla, int x, int y, int posArr) {
+    public Particula(Casilla casilla, int x, int y, int posMatrizOrdFila, int posMatrizOrdColumna) {
         this.color = Particula.COLOR_PRED;
         
         this.casillaAnt = casilla;
@@ -51,12 +55,13 @@ public class Particula {
         this.y = y;
         
         
-        this.posArr = posArr;
+        this.posMatrizOrdFila = posMatrizOrdFila;
+        this.posMatrizOrdColumna = posMatrizOrdColumna;
         
         setValorBasicos();
     }
 
-    public Particula(Casilla casilla, int x, int y, int posArr, Color color) {
+    public Particula(Casilla casilla, int x, int y, int posMatrizOrdFila, int posMatrizOrdColumna, Color color) {
         this.color = color;
         
         this.casillaAnt = casilla;
@@ -67,7 +72,8 @@ public class Particula {
         this.x = x;
         this.y = y;
         
-        this.posArr = posArr;
+        this.posMatrizOrdFila = posMatrizOrdFila;
+        this.posMatrizOrdColumna = posMatrizOrdColumna;
         
         setValorBasicos();
     }
@@ -84,7 +90,6 @@ public class Particula {
         this.movimientoY = 0;
     }
     
-    
     private boolean acelerar(){
         double gravedadX = ControladorParticulas.getGravedadX();
         double gravedadY = ControladorParticulas.getGravedadY();
@@ -94,19 +99,82 @@ public class Particula {
         // gravedad con valores negativos no está funcionando
         
         // Acelera si no hay colisión
-        if(!colision()){
-            if(gravedadX < 0 && this.aceleracionX > this.aceleracionBase * gravedadX)
-                this.aceleracionX -= (200D / frames);
-            else if(gravedadX > 0 && this.aceleracionX < this.aceleracionBase * gravedadX)
-                this.aceleracionX += (200D / frames);
-            if(gravedadY < 0 && this.aceleracionY > this.aceleracionBase * gravedadY)
-                this.aceleracionY -= (200D / frames);
-            else if(gravedadY > 0 && this.aceleracionY < this.aceleracionBase * gravedadY)
-                this.aceleracionY += (200D / frames);
-            
-            double incrementoX;
-            double incrementoY;
-            
+        
+        double incrementoX = 0;
+        double incrementoY = 0;
+        
+        // Define los incrementos a la coordenada para la siguiente posición según la aceleración
+        if(this.aceleracionX != 0 || this.aceleracionY != 0){
+            if(this.aceleracionX != 0)
+                incrementoX = (int) (Math.abs(this.aceleracionX) / this.aceleracionX);
+            if(this.aceleracionY != 0)
+                incrementoY = (int) (Math.abs(this.aceleracionY) / this.aceleracionY);
+        }
+        else{
+            if(gravedadX != 0)
+                incrementoX = (int) (Math.abs(gravedadX) / gravedadX);
+            if(gravedadY != 0)
+                incrementoY = (int) (Math.abs(gravedadY) / gravedadY);
+        }
+        
+        double aceleracionXTemp = this.aceleracionX;
+        double aceleracionYTemp = this.aceleracionY;
+        if((gravedadX < 0 && this.aceleracionX > this.aceleracionBase * gravedadX) || (gravedadX > 0 && this.aceleracionX < this.aceleracionBase * gravedadX))
+            aceleracionXTemp += ((this.aceleracionBase * gravedadX) / frames);
+        if((gravedadY < 0 && this.aceleracionY > this.aceleracionBase * gravedadY) || (gravedadY > 0 && this.aceleracionY < this.aceleracionBase * gravedadY))
+            aceleracionYTemp += ((this.aceleracionBase * gravedadY) / frames);
+        
+        Particula particula = this.casilla.getParticula(this.x + (int)incrementoX, this.y + (int)incrementoY);
+        boolean acelerar = false;
+        
+        if(particula == null && ControladorParticulas.getCasillaRelativa(this.x + (int)incrementoX, this.y + (int)incrementoY, this.casilla) != null)
+            acelerar = true;
+        
+        else if(particula != null){
+            if(particula.getAceleracionX() == 0 && particula.getAceleracionX() == aceleracionXTemp 
+                &&  particula.getAceleracionY() < 0 && particula.getAceleracionY() <= aceleracionYTemp){
+                
+                acelerar = true;
+            }
+            else if(particula.getAceleracionX() == 0 && particula.getAceleracionX() == aceleracionXTemp 
+                &&  particula.getAceleracionY() > 0 && particula.getAceleracionY() >= aceleracionYTemp){
+                
+                acelerar = true;
+            }
+            else if(particula.getAceleracionX() < 0 && particula.getAceleracionX() <= aceleracionXTemp 
+                &&  particula.getAceleracionY() == 0 && particula.getAceleracionY() == aceleracionYTemp){
+                
+                acelerar = true;
+            }
+            else if(particula.getAceleracionX() > 0 && particula.getAceleracionX() >= aceleracionXTemp 
+                &&  particula.getAceleracionY() == 0 && particula.getAceleracionY() == aceleracionYTemp){
+                
+                acelerar = true;
+            }
+            else if(particula.getAceleracionX() < 0 && particula.getAceleracionX() <= aceleracionXTemp 
+                &&  particula.getAceleracionY() > 0 && particula.getAceleracionY() >= aceleracionYTemp){
+                
+                acelerar = true;
+            }
+            else if(particula.getAceleracionX() > 0 && particula.getAceleracionX() >= aceleracionXTemp 
+                &&  particula.getAceleracionY() < 0 && particula.getAceleracionY() <= aceleracionYTemp){
+                
+                acelerar = true;
+            }
+            else if(particula.getAceleracionX() > 0 && particula.getAceleracionX() >= aceleracionXTemp 
+                &&  particula.getAceleracionY() > 0 && particula.getAceleracionY() >= aceleracionYTemp){
+                
+                acelerar = true;
+            }
+            else if(particula.getAceleracionX() < 0 && particula.getAceleracionX() <= aceleracionXTemp 
+                &&  particula.getAceleracionY() < 0 && particula.getAceleracionY() <= aceleracionYTemp){
+                
+                acelerar = true;
+            }
+        }
+        if(acelerar){
+            this.aceleracionX = aceleracionXTemp;
+            this.aceleracionY = aceleracionYTemp;
             incrementoX = this.aceleracionX / frames;
             incrementoY = this.aceleracionY / frames;
             
@@ -150,13 +218,11 @@ public class Particula {
             || ControladorParticulas.getCasillaRelativa(this.x + incrementoX, this.y + incrementoY, this.casilla) == null)){
             
             // Inercia
-            if(particula != null){
+            if(particula != null && !particula.isRodeada()){
                 if(incrementoX != 0)
                     particula.aceleracionX += this.aceleracionX * this.porc_inercia;
                 if(incrementoY != 0)
                     particula.aceleracionY += this.aceleracionY * this.porc_inercia;
-                
-                particula.getCasilla().setActiva(true);
             }
             
             if(incrementoX == 0){ // si no se estaba moviendo en x
@@ -205,15 +271,13 @@ public class Particula {
             }
             
             // Disminuye la aceleración dependiendo de el porcentaje de rebote
-            if(incrementoX != 0){
+            if(incrementoX != 0)
                 this.aceleracionX *= this.porc_rebote;
-            }
+            if(incrementoY != 0)
+                this.aceleracionY *= this.porc_rebote;
+            
             if(Math.abs(this.aceleracionX) < 1)
                 this.aceleracionX = 0;
-            
-            if(incrementoY != 0){
-                this.aceleracionY *= this.porc_rebote;
-            }
             if(Math.abs(this.aceleracionY) < 1)
                 this.aceleracionY = 0;
             
@@ -226,7 +290,7 @@ public class Particula {
         return false;
     }
     
-    public boolean actualizar(int hilo){
+    public void actualizar(int hilo){
         this.color = new Color((int) Juego.random.getNum(hilo, 256)
                                 , (int) Juego.random.getNum(hilo, 256)
                                 , (int) Juego.random.getNum(hilo, 256));
@@ -252,23 +316,25 @@ public class Particula {
                 if(movY)
                     incrementoY = (int) (Math.abs(this.movimientoY) / this.movimientoY);
                 
+                if(rebote(hilo))
+                    break;
+                
                 // Si la particula en dicha posición está libre
                 if(this.casilla.isParticulaNull(this.x + incrementoX, this.y + incrementoY)){
                     this.casilla.moverParticula(this.x + incrementoX, this.y + incrementoY, this, false);
                     this.movimientoX -= incrementoX;
                     this.movimientoY -= incrementoY;
                 }
-                if(rebote(hilo))
-                    return true;
                 
                 movX = Math.abs(this.movimientoX) - 1 >= 0;
                 movY = Math.abs(this.movimientoY) - 1 >= 0;
             }
             
-            return true;
+            this.activa = true;
         }
         else
-            return rebote(hilo);
+            this.activa = rebote(hilo);
+        
     }
     
     /**
@@ -279,35 +345,26 @@ public class Particula {
         this.yAnt = this.y;
         this.casillaAnt = this.casilla;
     }
+
+    public boolean isActiva() {
+        return activa;
+    }
     
-    /**
-     * Retorna true si hay colisión a donde se dirige la partícula
-     * @return 
-     */
-    private boolean colision(){
-        int incrementoX = 0;
-        int incrementoY = 0;
-        
-        // Define los incrementos a la coordenada para la siguiente posición según la aceleración
-        if(this.aceleracionX != 0 || this.aceleracionY != 0){
-            if(this.aceleracionX != 0)
-                incrementoX = (int) (Math.abs(this.aceleracionX) / this.aceleracionX);
-            if(this.aceleracionY != 0)
-                incrementoY = (int) (Math.abs(this.aceleracionY) / this.aceleracionY);
+    public boolean isRodeada(){
+        for (int i = -1; i <= -1; i++) {
+            for (int j = -1; j <= -1; j++) {
+                if(this.casilla.isParticulaNull(this.x + j, this.y + i) 
+                    && ControladorParticulas.getCasillaRelativa(this.x + j, this.y + i, this.casilla) != null){
+                    
+                    return false;
+                }
+            }
         }
-        else{
-            // define el incremento según la gravedad
-            double gravedadX = ControladorParticulas.getGravedadX();
-            double gravedadY = ControladorParticulas.getGravedadY();
-            
-            if(gravedadX != 0)
-                incrementoX = (int) (Math.abs(gravedadX) / gravedadX);
-            if(gravedadY != 0)
-                incrementoY = (int) (Math.abs(gravedadY) / gravedadY);
-        }
-        
-        return !this.casilla.isParticulaNull(this.x + incrementoX, this.y + incrementoY)
-                || ControladorParticulas.getCasillaRelativa(this.x + incrementoX, this.y + incrementoY, this.casilla) == null;
+        return true;
+    }
+
+    public boolean isActualizada() {
+        return actualizada;
     }
     
     public int getX() {
@@ -316,6 +373,14 @@ public class Particula {
 
     public int getY() {
         return y;
+    }
+
+    public int getXAnt() {
+        return xAnt;
+    }
+
+    public int getYAnt() {
+        return yAnt;
     }
     
     public int getXPantalla() {
@@ -350,13 +415,45 @@ public class Particula {
         return size;
     }
 
-    public int getPosArr() {
-        return posArr;
+    public int getPosMatrizOrdFila() {
+        return posMatrizOrdFila;
+    }
+
+    public int getPosMatrizOrdColumna() {
+        return posMatrizOrdColumna;
+    }
+
+    public double getAceleracionX() {
+        return aceleracionX;
+    }
+
+    public double getAceleracionY() {
+        return aceleracionY;
+    }
+
+    public void setActualizada(boolean actualizada) {
+        this.actualizada = actualizada;
+    }
+    
+    public void setAceleracionX(double aceleracionX) {
+        this.aceleracionX = aceleracionX;
+    }
+
+    public void setAceleracionY(double aceleracionY) {
+        this.aceleracionY = aceleracionY;
+    }
+
+    public void setPosMatrizOrdFila(int posMatrizOrdFila) {
+        this.posMatrizOrdFila = posMatrizOrdFila;
+    }
+
+    public void setPosMatrizOrdColumna(int posMatrizOrdColumna) {
+        this.posMatrizOrdColumna = posMatrizOrdColumna;
     }
 
     
-    public void setPosArr(int posArr) {
-        this.posArr = posArr;
+    public void setActiva(boolean activa) {
+        this.activa = activa;
     }
     
     public void setX(int x) {
@@ -374,11 +471,11 @@ public class Particula {
     public static int cordRelativaAEx(int cord){
         if(cord < 0){
             cord *= -1;
-            double porc = (double)cord / (double)Casilla.size;
-            return (int)(Casilla.size - ((porc - ((int) porc)) * Casilla.size));
+            double porc = (double)cord / (double)Casilla.SIZE;
+            return (int)(Casilla.SIZE - ((porc - ((int) porc)) * Casilla.SIZE));
         }
-        if(cord >= Casilla.size)
-            return ((cord / Casilla.size) - ((int) (cord / Casilla.size))) * Casilla.size;
+        if(cord >= Casilla.SIZE)
+            return ((cord / Casilla.SIZE) - ((int) (cord / Casilla.SIZE))) * Casilla.SIZE;
         
         return cord;
     }

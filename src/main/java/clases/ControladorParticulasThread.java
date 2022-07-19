@@ -4,6 +4,10 @@
  */
 package clases;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+
 /**
  *
  * @author Josue Alvarez M
@@ -15,31 +19,77 @@ public class ControladorParticulasThread implements Runnable{
     private final int id;
     private final int cantidad; // cantidad total de hilos (ControladorParticulasThread)
     
-    private final Casilla[] casillasArray;
-    private final int casArr_tam;
-
-    public ControladorParticulasThread(int id, int cantidad, Casilla[] casillasArr, int tam) {
+    private final HashMap<Integer, HashMap<Integer, Casilla>> matrizCasillas;
+    private final ArrayList<Integer> posicionesFila;
+    private final ArrayList<Integer> posicionesColumna;
+    
+    public ControladorParticulasThread(int id, int cantidad, HashMap<Integer, HashMap<Integer, Casilla>> matrizCasillas) {
         this.id = id;
         this.cantidad = cantidad;
         
-        this.casillasArray = casillasArr;
-        this.casArr_tam = tam;
+        this.matrizCasillas = matrizCasillas;
         
         this.actualizar = false;
         this.finalizado = false;
         
+        this.posicionesFila = new ArrayList<>();
+        this.posicionesColumna = new ArrayList<>();
+        definirPosiciones();
+                
         iniciarThread();
     }
-
+    
+    private void definirPosiciones(){
+        int cantFilas = this.matrizCasillas.size();
+        int cantColumnas = this.matrizCasillas.get(0).size();
+        
+        for (int i = 0; i < cantColumnas; i++) {
+            this.posicionesFila.add(i);
+        }
+        for (int i = 0; i < cantFilas; i++) {
+            this.posicionesColumna.add(i);
+        }
+    }
+    
     private void actualizarParticula(){
+        int cantFilas = this.matrizCasillas.size();
+        int cantColumnas = this.matrizCasillas.get(0).size();
+        
+        // Redefine las posiciones de ser necesario
+        if(cantColumnas != this.posicionesFila.size() || cantFilas != this.posicionesColumna.size()){
+            this.posicionesFila.clear();
+            this.posicionesColumna.clear();
+            definirPosiciones();
+        }
+        
         Casilla casilla;
-        for (int i = this.id; i < this.casArr_tam; i += this.cantidad) {
-            casilla = this.casillasArray[i];
-            
-            if(casilla == null)
-                break;
-            
-            casilla.actualizar(this.id);
+        int pos, posVal;
+        for (int i = cantFilas - 1; i >= 0; i--) {
+            for (int tam = cantColumnas; tam > 0; tam--) {
+                pos = (int) Juego.random.getNum(this.id, tam);
+                posVal = this.posicionesFila.get(pos);
+                
+                casilla = this.matrizCasillas.get(i).get(posVal);
+
+                // Pasa la casilla al final
+                this.posicionesFila.set(pos, this.posicionesFila.get(tam-1));
+                this.posicionesFila.set(tam-1, posVal);
+
+                if(!casilla.isNull()){
+                    casilla.pintarBorde();
+                    casilla.actualizar(this.id);
+                }
+                else
+                    casilla.quitarBorde();
+            }
+        }
+        
+        for (int i = 0; i < cantFilas; i++) {
+            for (int j = 0; j < cantColumnas; j++) {
+                casilla = this.matrizCasillas.get(i).get(j);
+                
+                casilla.setActualizadaFalse();
+            }
         }
     }
     

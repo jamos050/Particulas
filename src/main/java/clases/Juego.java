@@ -26,7 +26,7 @@ public class Juego{
         Juego.random.addLista(cantHilos - 1);
         Juego.random.setMax(1000);
         
-        this.controladorF = ControladorFrames.getTiempo(144);
+        this.controladorF = ControladorFrames.getTiempo(60);
     }
 
     private static void raton(){
@@ -38,8 +38,7 @@ public class Juego{
     
     public static void actualizarFrame() throws InterruptedException, IOException{
         Juego.controladorP.actualizar();
-        Juego.pantalla.pintar(Juego.controladorP);
-
         raton();
+        Juego.pantalla.pintar(Juego.controladorP);
     }
 }

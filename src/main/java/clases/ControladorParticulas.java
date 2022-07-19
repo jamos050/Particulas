@@ -25,7 +25,7 @@ public class ControladorParticulas{
     
     public ControladorParticulas(int alto, int ancho, int cantHilos) {
         ControladorParticulas.gravedadX = 0;
-        ControladorParticulas.gravedadY = -1;
+        ControladorParticulas.gravedadY = 1;
         
         generarMatrizCasillas(alto, ancho);
         
@@ -41,7 +41,7 @@ public class ControladorParticulas{
         HashMap<Integer, Casilla> fila;
         
         Casilla casilla;
-        int incremento = Casilla.size * Particula.getSize();
+        int incremento = Casilla.SIZE * Particula.getSize();
         int posX;
         int posY = 0;
         for (int y = 0; y < alto; y += incremento) {
@@ -66,7 +66,7 @@ public class ControladorParticulas{
         
         ControladorParticulasThread controladorPT;
         for (int i = 0; i < cantHilos; i++) {
-            controladorPT = new ControladorParticulasThread(i, cantHilos, this.casillasArr, this.casArr_tam);
+            controladorPT = new ControladorParticulasThread(i, cantHilos, this.matrizCasillas);
             this.hilos.add(controladorPT);
         }
     }
@@ -92,7 +92,7 @@ public class ControladorParticulas{
             if(casilla == null)
                 break;
             
-            if(casilla.isNull() || !casilla.isActiva())
+            if(casilla.isNull())
                 quitarCasillaArray(i);
         }
     }
@@ -102,7 +102,6 @@ public class ControladorParticulas{
             Casilla casilla = ControladorParticulas.casillasArr[i];
             
             casilla.pintar();
-            //casilla.quitarBorde();
         }
     }
     
@@ -142,34 +141,6 @@ public class ControladorParticulas{
         return false;
     }
     
-    /**
-     * Marca como activa y agrega a casillasArray la casilla
-     * indicada y sus cercanas
-     * @param casilla 
-     */
-    public static void activar(Casilla casilla){
-        casilla.setActiva(true);
-        
-        int x;
-        int y = casilla.getPosY() - 1;
-        
-        for (int i = 0; i < 3; i++) {
-            x = casilla.getPosX() - 1;
-            for (int j = 0; j < 3; j++) {
-                if(ControladorParticulas.matrizCasillas.containsKey(y) && ControladorParticulas.matrizCasillas.get(y).containsKey(x)){
-                    Casilla casillaCercana = ControladorParticulas.matrizCasillas.get(y).get(x);
-                    if(!casillaCercana.isEnArrayCasillas() && !casillaCercana.isNull()){
-                        casillaCercana.setActiva(true);
-                        agregarCasillaArray(casillaCercana);
-                    }
-                }
-                x++;
-            }
-            y++;
-        }
-        
-    }
-    
     public synchronized static void agregarCasillaArray(Casilla casilla){
         casilla.setEnArrayCasillas(true);
         ControladorParticulas.casillasArr[ControladorParticulas.posFinArr] = casilla;
@@ -193,7 +164,7 @@ public class ControladorParticulas{
         Casilla casillaIni = ControladorParticulas.matrizCasillas.get(0).get(0);
         Casilla casillaFin = ControladorParticulas.matrizCasillas.get(cantFilas-1).get(cantColum-1);
         
-        int incremento = Casilla.size * Particula.getSize();
+        int incremento = Casilla.SIZE * Particula.getSize();
         int posX, posY;
         if(x < casillaIni.getXIni() || x >= casillaFin.getXFin())
             return null;
@@ -222,8 +193,8 @@ public class ControladorParticulas{
         int posX = casilla.getPosX();
         int posY = casilla.getPosY();
         
-        double incX = (double)x / (double)Casilla.size;
-        double incY = (double)y / (double)Casilla.size;
+        double incX = (double)x / (double)Casilla.SIZE;
+        double incY = (double)y / (double)Casilla.SIZE;
         
         if(incX < 0)
             incX--;
