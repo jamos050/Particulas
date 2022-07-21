@@ -25,7 +25,7 @@ public class ControladorFrames implements Runnable{
         this.promedio = ControladorFrames.NS_POR_SEGUNDO / frames;
     }
     
-    public static ControladorFrames getTiempo(int frames){
+    public static ControladorFrames newEntity(int frames){
         if(ControladorFrames.entidad == null){
             ControladorFrames.entidad = new ControladorFrames(frames);
             Thread t = new Thread(ControladorFrames.entidad);

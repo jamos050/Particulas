@@ -105,6 +105,65 @@ public class ControladorParticulas{
         }
     }
     
+    private void rotarGravedadY(double velocidad, double max){
+        int signo = (int) (Math.abs(ControladorParticulas.gravedadY) / ControladorParticulas.gravedadY);
+        double incremento = (velocidad / ((double)ControladorFrames.getFrames()));
+
+        if((Math.abs(max) / max) != signo){
+            ControladorParticulas.gravedadY -= (double)signo * incremento;
+            if(ControladorParticulas.gravedadY == 0)
+                ControladorParticulas.gravedadY = -((double)signo) * incremento;
+        }
+        else{
+            ControladorParticulas.gravedadY += (double)signo * incremento;
+            if(ControladorParticulas.gravedadY > max)
+                ControladorParticulas.gravedadY = max;
+        }
+    }
+    private void rotarGravedadX(double velocidad, double max){
+        int signo = (int) (Math.abs(ControladorParticulas.gravedadX) / ControladorParticulas.gravedadX);
+        double incremento = (velocidad / ((double)ControladorFrames.getFrames()));
+
+        if((Math.abs(max) / max) != signo){
+            ControladorParticulas.gravedadX -= (double)signo * incremento;
+            if(ControladorParticulas.gravedadX == 0)
+                ControladorParticulas.gravedadX = -((double)signo) * incremento;
+        }
+        else{
+            ControladorParticulas.gravedadX += (double)signo * incremento;
+            if(ControladorParticulas.gravedadX > max)
+                ControladorParticulas.gravedadX = max;
+        }
+    }
+    public void rotarGravedad(){
+        double velocidad = 0.25;
+        double max = 1;
+        
+        if(ControladorParticulas.gravedadX == 0)
+            ControladorParticulas.gravedadX = max;
+        if(ControladorParticulas.gravedadY == 0)
+            ControladorParticulas.gravedadY = max;
+        
+        if(ControladorParticulas.gravedadX == max && ControladorParticulas.gravedadY != max)
+            rotarGravedadY(velocidad, max);
+        else if(ControladorParticulas.gravedadX != -max && ControladorParticulas.gravedadY == max)
+            rotarGravedadX(velocidad, -max);
+        else if(ControladorParticulas.gravedadX == -max && ControladorParticulas.gravedadY != -max)
+            rotarGravedadY(velocidad, -max);
+        else if(ControladorParticulas.gravedadX != max && ControladorParticulas.gravedadY == -max)
+            rotarGravedadX(velocidad, max);
+        
+        int cantFilas = ControladorParticulas.matrizCasillas.size();
+        int cantColumnas = ControladorParticulas.matrizCasillas.get(0).size();
+        for (int i = 0; i < cantFilas; i++) {
+            for (int j = 0; j < cantColumnas; j++) {
+                Casilla casilla = ControladorParticulas.matrizCasillas.get(i).get(j);
+                
+                casilla.activarCasilla();
+            }
+        }
+    }
+    
     private void quitarCasillaArray(int pos){
         ControladorParticulas.casillasArr[pos].setEnArrayCasillas(false);
         ControladorParticulas.casillasArr[pos] = ControladorParticulas.casillasArr[ControladorParticulas.posFinArr - 1];

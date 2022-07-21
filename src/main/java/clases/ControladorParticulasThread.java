@@ -51,6 +51,16 @@ public class ControladorParticulasThread implements Runnable{
         }
     }
     
+    private void actualizarCasilla(Casilla casilla){
+        if(!casilla.isNull()){
+            //casilla.pintarBorde();
+            casilla.actualizar(this.id);
+        }
+        else{
+            //casilla.quitarBorde();
+        }
+    }
+    
     private void actualizarParticula(){
         int cantFilas = this.matrizCasillas.size();
         int cantColumnas = this.matrizCasillas.get(0).size();
@@ -62,33 +72,87 @@ public class ControladorParticulasThread implements Runnable{
             definirPosiciones();
         }
         
+        double gravedadY = ControladorParticulas.getGravedadY();
+        double gravedadX = ControladorParticulas.getGravedadX();
+        
         Casilla casilla;
         int pos, posVal;
-        for (int i = cantFilas - 1; i >= 0; i--) {
-            for (int tam = cantColumnas; tam > 0; tam--) {
-                pos = (int) Juego.random.getNum(this.id, tam);
-                posVal = this.posicionesFila.get(pos);
-                
-                casilla = this.matrizCasillas.get(i).get(posVal);
+        
+        if(Math.abs(gravedadY) > Math.abs(gravedadX)){
+            if(gravedadY > 0){
+                for (int i = cantFilas - 1; i >= 0; i--) {
+                    for (int tam = cantColumnas; tam > 0; tam--) {
+                        pos = (int) Juego.random.getNum(this.id, tam);
+                        posVal = this.posicionesFila.get(pos);
 
-                // Pasa la casilla al final
-                this.posicionesFila.set(pos, this.posicionesFila.get(tam-1));
-                this.posicionesFila.set(tam-1, posVal);
+                        casilla = this.matrizCasillas.get(i).get(posVal);
 
-                if(!casilla.isNull()){
-                    casilla.pintarBorde();
-                    casilla.actualizar(this.id);
+                        // Pasa la casilla al final
+                        this.posicionesFila.set(pos, this.posicionesFila.get(tam-1));
+                        this.posicionesFila.set(tam-1, posVal);
+
+                        actualizarCasilla(casilla);
+                    }
                 }
-                else
-                    casilla.quitarBorde();
+            }
+            else{
+                for (int i = 0; i < cantFilas; i++) {
+                    for (int tam = cantColumnas; tam > 0; tam--) {
+                        pos = (int) Juego.random.getNum(this.id, tam);
+                        posVal = this.posicionesFila.get(pos);
+
+                        casilla = this.matrizCasillas.get(i).get(posVal);
+
+                        // Pasa la casilla al final
+                        this.posicionesFila.set(pos, this.posicionesFila.get(tam-1));
+                        this.posicionesFila.set(tam-1, posVal);
+
+                        actualizarCasilla(casilla);
+                    }
+                }
             }
         }
+        else{
+            if(gravedadX > 0){
+                for (int i = cantColumnas - 1; i >= 0; i--) {
+                    for (int tam = cantFilas; tam > 0; tam--) {
+                        pos = (int) Juego.random.getNum(this.id, tam);
+                        posVal = this.posicionesColumna.get(pos);
+
+                        casilla = this.matrizCasillas.get(posVal).get(i);
+
+                        // Pasa la casilla al final
+                        this.posicionesColumna.set(pos, this.posicionesColumna.get(tam-1));
+                        this.posicionesColumna.set(tam-1, posVal);
+
+                        actualizarCasilla(casilla);
+                    }
+                }
+            }
+            else{
+                for (int i = 0; i < cantColumnas; i++) {
+                    for (int tam = cantFilas; tam > 0; tam--) {
+                        pos = (int) Juego.random.getNum(this.id, tam);
+                        posVal = this.posicionesColumna.get(pos);
+
+                        casilla = this.matrizCasillas.get(posVal).get(i);
+
+                        // Pasa la casilla al final
+                        this.posicionesColumna.set(pos, this.posicionesColumna.get(tam-1));
+                        this.posicionesColumna.set(tam-1, posVal);
+
+                        actualizarCasilla(casilla);
+                    }
+                }
+            }
+        }
+        
         
         for (int i = 0; i < cantFilas; i++) {
             for (int j = 0; j < cantColumnas; j++) {
                 casilla = this.matrizCasillas.get(i).get(j);
                 
-                casilla.setActualizadaFalse();
+                casilla.setActualizada(false);
             }
         }
     }

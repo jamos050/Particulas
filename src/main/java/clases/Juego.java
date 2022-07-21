@@ -26,7 +26,7 @@ public class Juego{
         Juego.random.addLista(cantHilos - 1);
         Juego.random.setMax(1000);
         
-        this.controladorF = ControladorFrames.getTiempo(60);
+        this.controladorF = ControladorFrames.newEntity(144);
     }
 
     private static void raton(){
@@ -40,5 +40,7 @@ public class Juego{
         Juego.controladorP.actualizar();
         raton();
         Juego.pantalla.pintar(Juego.controladorP);
+        
+        //Juego.controladorP.rotarGravedad();
     }
 }

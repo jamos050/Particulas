@@ -165,6 +165,19 @@ public class Casilla {
         }
     }
     
+    public synchronized void activarCasilla(){
+        Particula particula;
+        int tam;
+        for (int i = 0; i < Casilla.SIZE; i++) {
+            for (int j = 0; j < Casilla.SIZE; j++) {
+                particula = this.matriz[i][j];
+                if(particula != null && !particula.isActiva()){
+                    particula.setActiva(true);
+                    particula.getCasilla().agregarParticulaMatrizOrd(particula);
+                }
+            }
+        }
+    }
     /**
      * Agrega a las matrizOrdFila y matrizOrdColumna de su correspondiente casilla la
      * partícula indicada y sus cercanas. 
@@ -428,7 +441,7 @@ public class Casilla {
         return posY;
     }
     
-    public synchronized void setActualizadaFalse(){
+    public synchronized void setActualizada(boolean actualizada){
         int tam;
         Particula particula;
         for (int i = 0; i < Casilla.SIZE; i++) {
@@ -439,7 +452,7 @@ public class Casilla {
             for (int j = 0; j < tam; j++) {
                 particula = this.matrizOrdFila[i][j];
                 
-                particula.setActualizada(false);
+                particula.setActualizada(actualizada);
             }
         }
     }
